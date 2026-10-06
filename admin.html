@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>주문 관리</title>
+<style>
+ :root{--bg:#fff8ef;--line:#f0e1cf;--ink:#2b1d12;--muted:#8a7765;--accent:#ff6b2c;--ok:#1f9d55;--blue:#1b64da}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+ .wrap{max-width:720px;margin:0 auto;padding:16px}
+ .login{max-width:360px;margin:80px auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;text-align:center}
+ input[type=password]{width:100%;font-size:17px;padding:13px;border:1.5px solid var(--line);border-radius:12px;margin:14px 0 10px}
+ .btn{width:100%;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:800;background:var(--accent);color:#fff;cursor:pointer}
+ .err{color:#d93025;font-size:14px;min-height:18px}
+ .head{display:flex;justify-content:space-between;align-items:center}
+ .head a,.head button{font-size:13px;color:var(--muted);background:none;border:0;cursor:pointer;text-decoration:none}
+ .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:12px 0}
+ .stats div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:12px;color:var(--muted)}
+ .stats b{display:block;font-size:19px;color:var(--ink)}
+ .tabs{display:flex;gap:6px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:2}
+ .tabs button{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:10px;font-size:15px;font-weight:700;cursor:pointer;color:var(--muted)}
+ .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+ .o{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}
+ .o.done{background:#f4f1ec;opacity:.7}
+ .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+ .no{font-size:22px;font-weight:900;color:var(--accent)}
+ .nm{font-size:18px;font-weight:800}
+ .t{font-size:13px;color:var(--muted)}
+ .items{margin:8px 0;font-size:16px}
+ .acts{display:flex;gap:8px;margin-top:10px}
+ .acts button{flex:1;border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:800;cursor:pointer}
+ .pay{background:#fff1d6;color:#b26b00}.pay.yes{background:#e2efff;color:var(--blue)}
+ .fin{background:var(--ok);color:#fff}.fin.undo{background:#e9e3db;color:var(--ink)}
+ .del{flex:0 0 auto!important;background:#fde2e1;color:#d93025;padding:12px 14px!important}
+ .empty{text-align:center;color:var(--muted);padding:30px 0}
+</style></head><body>
+
+<div id="loginView" class="login">
+  <div style="font-size:40px">🔒</div>
+  <h2 style="margin:6px 0 0">관리자 로그인</h2>
+  <input id="pw" type="password" placeholder="관리자 비밀번호" autocomplete="current-password">
+  <div class="err" id="err"></div>
+  <button class="btn" id="loginBtn">들어가기</button>
+  <div style="margin-top:14px"><a href="/" style="color:var(--muted);font-size:13px">← 주문 페이지로</a></div>
+</div>
+
+<div id="adminView" class="wrap" style="display:none">
+  <div class="head"><h2 style="margin:0">🛠 주문 관리</h2><div><a href="/">주문페이지</a> · <button id="logout">로그아웃</button></div></div>
+  <div class="stats" id="stats"></div>
+  <div class="tabs">
+    <button data-f="todo" class="on">미완 <span id="cTodo"></span></button>
+    <button data-f="done">완료 <span id="cDone"></span></button>
+    <button data-f="all">전체</button>
+  </div>
+  <div id="list"></div>
+  <h3 style="margin-top:28px">⭐ 후기 관리 <span id="rvAvg" style="font-size:13px;color:var(--muted);font-weight:400"></span></h3>
+  <div id="rvList"></div>
+</div>
+
+<script type="module">
+import { configured, adminLogin, adminLogout, onAdmin, watchOrders, setStatus, removeOrder, itemsOf, watchReviews, removeReview } from './db.js';
+const $=id=>document.getElementById(id);
+const won=n=>n.toLocaleString('ko-KR')+'원';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const kst=d=>d.toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+let filter='todo', orders=[], unsub=null, seen=null, actx=null;
+// 새 주문 알림음 + 진동
+function beep(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); [0,0.18].forEach(t=>{ const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=880; o.connect(g); g.connect(actx.destination); g.gain.setValueAtTime(0.3,actx.currentTime+t); g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+t+0.15); o.start(actx.currentTime+t); o.stop(actx.currentTime+t+0.16); }); }catch{} try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch{} }
+document.addEventListener('click',()=>{ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); }catch{} });
+function checkNew(list){ const ids=new Set(list.map(o=>o.id)); if(seen){ const fresh=list.filter(o=>!seen.has(o.id)); if(fresh.length){ beep(); document.title=`🔔 새 주문 ${fresh.length}건`; setTimeout(()=>document.title='주문 관리',4000); } } seen=ids; }
+
+async function login(){
+  $('err').textContent='';
+  if(!configured){ $('err').textContent='config.js에 Firebase 설정을 먼저 넣어주세요.'; return; }
+  try{ await adminLogin($('pw').value); }
+  catch(e){ $('err').textContent = /password|credential/i.test(e.code||'') ? '비밀번호가 틀렸어요.' : '로그인 실패 ('+(e.code||e.message)+')'; }
+}
+$('loginBtn').onclick=login;
+$('pw').onkeydown=e=>{ if(e.key==='Enter') login(); };
+$('logout').onclick=()=>adminLogout();
+document.querySelector('.tabs').onclick=e=>{ const b=e.target.closest('button[data-f]'); if(!b) return;
+  filter=b.dataset.f; document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); render(); };
+
+if(configured) onAdmin(ok=>{
+  $('loginView').style.display=ok?'none':'block'; $('adminView').style.display=ok?'block':'none';
+  if(ok && !unsub) unsub=watchOrders(o=>{orders=o;checkNew(o);render();}); watchReviews(renderRv);
+  if(!ok && unsub){ unsub(); unsub=null; }
+});
+
+async function change(id,status){ try{ await setStatus(id,status); }catch(e){ alert('변경 실패: '+(e.code||e.message)); } }
+window.togglePay=id=>{ const o=orders.find(x=>x.id===id); change(id,o.status==='입금대기'?'입금확인':'입금대기'); };
+window.toggleDone=id=>{ const o=orders.find(x=>x.id===id); change(id,o.status==='수령완료'?'입금확인':'수령완료'); };
+window.del=async id=>{ const o=orders.find(x=>x.id===id); if(!confirm('#'+o.no+' 주문을 삭제할까요?')) return;
+  try{ await removeOrder(id); }catch(e){ alert('삭제 실패: '+(e.code||e.message)); } };
+
+function renderRv(list){
+  $('rvAvg').textContent = list.length ? `평균 ★${(list.reduce((a,r)=>a+r.stars,0)/list.length).toFixed(1)} · ${list.length}개` : '';
+  $('rvList').innerHTML = list.length ? list.map(r=>`<div class="o"><div class="row"><div><b>${esc(r.name)}</b> <span style="color:#ffb22c">${'★'.repeat(r.stars)}</span> <span class="t">${kst(r.createdAt)}</span></div><button class="del" style="border:0;border-radius:10px;padding:8px 12px;cursor:pointer" onclick="delRv('${r.id}')">🗑</button></div>${r.text?`<div style="margin-top:6px">${esc(r.text)}</div>`:''}</div>`).join('') : '<div class="empty">후기 없음</div>';
+}
+window.delRv=async id=>{ if(!confirm('이 후기를 삭제할까요?')) return; try{ await removeReview(id); }catch(e){ alert('삭제 실패: '+(e.code||e.message)); } };
+
+function render(){
+  const done=orders.filter(o=>o.status==='수령완료'), todo=orders.filter(o=>o.status!=='수령완료');
+  const paid=orders.filter(o=>o.status!=='입금대기');
+  const cnt={}; todo.forEach(o=>itemsOf(o).forEach(i=>cnt[i.name]=(cnt[i.name]||0)+i.qty));
+  $('cTodo').textContent=todo.length; $('cDone').textContent=done.length;
+  $('stats').innerHTML=`<div>총 주문<b>${orders.length}건</b></div><div>총 매출<b>${won(orders.reduce((a,o)=>a+o.total,0))}</b></div><div>입금 확인액<b>${won(paid.reduce((a,o)=>a+o.total,0))}</b></div>`
+    + (Object.keys(cnt).length?`<div style="grid-column:1/-1">🔥 지금 만들어야 할 것<b style="font-size:16px">${Object.entries(cnt).map(([k,v])=>`${esc(k)} ${v}`).join(' · ')}</b></div>`:'');
+  const list = filter==='todo' ? [...todo].sort((a,b)=>a.no-b.no) : filter==='done' ? done : orders;
+  $('list').innerHTML = list.length ? list.map(o=>{
+    const isDone=o.status==='수령완료', isPaid=o.status!=='입금대기';
+    return `<div class="o ${isDone?'done':''}">
+      <div class="row"><div><span class="no">#${o.no}</span> <span class="nm">${esc(o.name)}</span></div><div class="t">🕒 ${kst(o.createdAt)}</div></div>
+      <div class="items">${itemsOf(o).map(i=>`${esc(i.name)} <b>×${i.qty}</b>`).join(' · ')}</div>
+      <div class="row"><b>${won(o.total)}</b><span class="t">${esc(o.status)}</span></div>
+      <div class="acts">
+        <button class="pay ${isPaid?'yes':''}" onclick="togglePay('${o.id}')">${isPaid?'💰 입금확인됨':'💸 입금 미확인'}</button>
+        <button class="fin ${isDone?'undo':''}" onclick="toggleDone('${o.id}')">${isDone?'↩ 미완으로':'✅ 완료'}</button>
+        <button class="del" onclick="del('${o.id}')">🗑</button>
+      </div></div>`;}).join('') : `<div class="empty">${filter==='todo'?'미완 주문이 없어요 🎉':'주문이 없어요'}</div>`;
+}
+</script></body></html>

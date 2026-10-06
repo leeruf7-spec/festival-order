@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      // ↓ config.js의 ADMIN_EMAIL과 같아야 함
+      return request.auth != null && request.auth.token.email == 'admin@festival-order.com';
+    }
+
+    function okQty(v) { return v is int && v >= 0 && v <= 50; }
+
+    function validOrder(d) {
+      let q = d.qty;
+      return d.keys().hasOnly(['no', 'name', 'qty', 'total', 'status', 'createdAt'])
+        && d.keys().hasAll(['no', 'name', 'qty', 'total', 'status', 'createdAt'])
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 20
+        && q.keys().hasOnly(['udon', 'mandu', 'eomuk', 'set'])
+        && q.keys().hasAll(['udon', 'mandu', 'eomuk', 'set'])
+        && okQty(q.udon) && okQty(q.mandu) && okQty(q.eomuk) && okQty(q.set)
+        // ↓ 메뉴 가격 (config.js와 같아야 함)
+        && d.total == q.udon * 4000 + q.mandu * 3500 + q.eomuk * 500 + q.set * 7000
+        && d.total > 0
+        && d.status == '입금대기'
+        && d.createdAt == request.time
+        && d.no == getAfter(/databases/$(database)/documents/meta/counter).data.n;
+    }
+
+    match /orders/{id} {
+      allow read: if true;
+      allow create: if validOrder(request.resource.data);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['입금대기', '입금확인', '수령완료'];
+      allow delete: if isAdmin();
+    }
+
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['name', 'stars', 'text', 'createdAt'])
+        && request.resource.data.keys().hasAll(['name', 'stars', 'text', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 20
+        && request.resource.data.stars is int
+        && request.resource.data.stars >= 1 && request.resource.data.stars <= 5
+        && request.resource.data.text is string && request.resource.data.text.size() <= 200
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isAdmin();
+    }
+
+    match /meta/counter {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['n']) && request.resource.data.n == 1;
+      allow update: if request.resource.data.keys().hasOnly(['n']) && request.resource.data.n == resource.data.n + 1;
+    }
+  }
+}

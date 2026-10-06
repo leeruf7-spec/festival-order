@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>주문 QR</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;text-align:center;background:#fff;color:#2b1d12}
+h1{font-size:44px;margin:40px 0 6px}p{font-size:22px;color:#8a7765;margin:0 0 28px}#qr{display:inline-block;padding:18px;border:6px solid #ff6b2c;border-radius:24px}
+.u{margin-top:18px;font-size:16px;color:#8a7765}@media print{button{display:none}}</style></head>
+<body><h1>🍜 여기서 주문하세요!</h1><p>QR 찍고 → 이름 입력 → 주문 → 송금</p>
+<div id="qr"></div><div class="u" id="u"></div><div style="margin-top:14px;font-size:20px;font-weight:700">🚀 운영 · 전남대 여수 창업동아리</div><br><button onclick="print()" style="font-size:18px;padding:10px 20px">인쇄하기</button>
+<script>const url=location.origin+'/';new QRCode(document.getElementById('qr'),{text:url,width:360,height:360,correctLevel:QRCode.CorrectLevel.M});document.getElementById('u').textContent=url;</script>
+</body></html>
