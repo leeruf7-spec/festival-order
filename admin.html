@@ -28,10 +28,28 @@
  .acts{display:flex;gap:8px;margin-top:10px}
  .acts button{flex:1;border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:800;cursor:pointer}
  .pay{background:#fff1d6;color:#b26b00}.pay.yes{background:#e2efff;color:var(--blue)}
- .fin{background:var(--ok);color:#fff}.fin.undo{background:#e9e3db;color:var(--ink)}
+ .fin{background:var(--ok);color:#fff}.pay.sent{background:#1f9d55;color:#fff;animation:pulse 1s infinite alternate}@keyframes pulse{to{opacity:.6}}.fin.undo{background:#e9e3db;color:var(--ink)}
  .del{flex:0 0 auto!important;background:#fde2e1;color:#d93025;padding:12px 14px!important}
  .empty{text-align:center;color:var(--muted);padding:30px 0}
+ .o{padding:16px} .o.hot{border:3px solid #1f9d55;box-shadow:0 0 0 4px #dff5e7}
+ .nm{font-size:20px} .no{font-size:26px}
+ .items{font-size:18px}
+ .paym{font-size:14px;font-weight:700;background:#f3ebe2;border-radius:99px;padding:4px 10px}
+ .step{margin:12px 0 8px;font-weight:800;font-size:16px}
+ .big{width:100%;border:0;border-radius:14px;padding:18px;font-size:20px;font-weight:900;cursor:pointer;color:#fff}
+ .go-pay{background:#1b64da}.go-sent{background:#1f9d55;animation:pulse 1s infinite alternate}.go-food{background:#ff6b2c}.go-cook{background:#7b4dd8}.go-done{background:#2b1d12}
+ .prog{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:10px;font-size:12px;font-weight:800}
+ .ps{background:#f3ebe2;color:#a8957f;border-radius:99px;padding:4px 8px}.ps.ok{background:#dff5e7;color:#1f9d55}.ps.now{background:#ff6b2c;color:#fff}.pa{color:#c9b8a5}
+ .mini{display:flex;gap:6px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+ .mini button{border:0;background:#f3ebe2;color:#6b5440;border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700;cursor:pointer}
+ .guide{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.7;margin:10px 0}
+ .newpop{background:#2b1d12;color:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25);border-left:8px solid #ff6b2c;animation:npin .35s;cursor:pointer}
+ @keyframes npin{from{transform:translateY(-20px);opacity:0}}
+ .np-t{color:#ffb22c;font-weight:900;font-size:15px}.np-n{font-size:24px;font-weight:900;margin-top:2px}.np-i{font-size:16px;margin-top:2px}
+ #pops{position:fixed;top:10px;left:50%;transform:translateX(-50%);width:min(94vw,520px);z-index:60}
+ .vbtn{border:0;border-radius:8px;padding:6px 10px;font-weight:800;font-size:13px;background:#f3ebe2;cursor:pointer}
 </style></head><body>
+<div id="pops"></div>
 
 <div id="loginView" class="login">
   <div style="font-size:40px">🔒</div>
@@ -43,7 +61,8 @@
 </div>
 
 <div id="adminView" class="wrap" style="display:none">
-  <div class="head"><h2 style="margin:0">🛠 주문 관리</h2><div><a href="/">주문페이지</a> · <button id="logout">로그아웃</button></div></div>
+  <div class="head"><h2 style="margin:0">🛠 주문 관리</h2><div><a href="/board.html" target="_blank" style="color:#fff;background:#ff6b2c;padding:6px 10px;border-radius:8px;font-weight:800;font-size:14px">📺 전광판 열기</a> · <a href="/">주문페이지</a> · <button class="vbtn" id="vbtn">🔊 음성 ON</button> · <button id="logout">로그아웃</button></div></div>
+  <div class="guide"><b>사용법</b> — 주문 카드의 <b>큰 버튼 하나만</b> 누르면 돼요<br>① 💰 송금확인 → ② 📋 주문확인(조리 시작) → ③ 🍜 음식 나왔어요(손님 폰 알람) → ④ ✅ 최종완료(받아감)</div>
   <div class="stats" id="stats"></div>
   <div class="tabs">
     <button data-f="todo" class="on">미완 <span id="cTodo"></span></button>
@@ -65,7 +84,18 @@ let filter='todo', orders=[], unsub=null, seen=null, actx=null;
 // 새 주문 알림음 + 진동
 function beep(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); [0,0.18].forEach(t=>{ const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=880; o.connect(g); g.connect(actx.destination); g.gain.setValueAtTime(0.3,actx.currentTime+t); g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+t+0.15); o.start(actx.currentTime+t); o.stop(actx.currentTime+t+0.16); }); }catch{} try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch{} }
 document.addEventListener('click',()=>{ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); }catch{} });
-function checkNew(list){ const ids=new Set(list.map(o=>o.id)); if(seen){ const fresh=list.filter(o=>!seen.has(o.id)); if(fresh.length){ beep(); document.title=`🔔 새 주문 ${fresh.length}건`; setTimeout(()=>document.title='주문 관리',4000); } } seen=ids; }
+let voiceOn=true, koVoice=null;
+function pickVoice(){ try{ const vs=speechSynthesis.getVoices(); koVoice=vs.find(v=>v.lang==='ko-KR')||vs.find(v=>v.lang?.startsWith('ko'))||null; }catch{} }
+try{ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }catch{}
+function say(t){ if(!voiceOn) return; try{ const u=new SpeechSynthesisUtterance(t); u.lang='ko-KR'; if(koVoice) u.voice=koVoice; u.rate=1.05; speechSynthesis.speak(u); }catch{} }
+const itemTxt=o=>itemsOf(o).map(i=>`${i.name.replace(/ \(.*\)/,'')} ${i.qty}개`).join(', ');
+function popup(o){
+  const el=document.createElement('div'); el.className='newpop';
+  el.innerHTML=`<div class="np-t">🔔 새 주문 #${o.no}</div><div class="np-n">${esc(o.name)}님</div><div class="np-i">${esc(itemTxt(o))} · ${won(o.total)} · ${o.pay==='현장결제'?'💵 현장결제':'💳 계좌이체'}</div>`;
+  el.onclick=()=>el.remove(); $('pops').prepend(el); setTimeout(()=>el.remove(),10000);
+}
+function checkNew(list){ const ids=new Set(list.map(o=>o.id)); if(seen){ const fresh=list.filter(o=>!seen.has(o.id)).sort((a,b)=>a.no-b.no); if(fresh.length){ beep(); document.title=`🔔 새 주문 ${fresh.length}건`; setTimeout(()=>document.title='주문 관리',6000);
+  fresh.forEach(o=>{ popup(o); say(`새 주문! ${o.no}번 ${o.name}님, ${itemTxt(o).replace(/,/g,' ')} 주문했어요`); }); } } seen=ids; }
 
 async function login(){
   $('err').textContent='';
@@ -75,6 +105,7 @@ async function login(){
 }
 $('loginBtn').onclick=login;
 $('pw').onkeydown=e=>{ if(e.key==='Enter') login(); };
+$('vbtn').onclick=()=>{ voiceOn=!voiceOn; $('vbtn').textContent=voiceOn?'🔊 음성 ON':'🔇 음성 OFF'; if(voiceOn) say('음성 알림 켜졌어요'); };
 $('logout').onclick=()=>adminLogout();
 document.querySelector('.tabs').onclick=e=>{ const b=e.target.closest('button[data-f]'); if(!b) return;
   filter=b.dataset.f; document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); render(); };
@@ -85,8 +116,9 @@ if(configured) onAdmin(ok=>{
   if(!ok && unsub){ unsub(); unsub=null; }
 });
 
+window.change=change;
 async function change(id,status){ try{ await setStatus(id,status); }catch(e){ alert('변경 실패: '+(e.code||e.message)); } }
-window.togglePay=id=>{ const o=orders.find(x=>x.id===id); change(id,o.status==='입금대기'?'입금확인':'입금대기'); };
+window.togglePay=id=>{ const o=orders.find(x=>x.id===id); change(id,(o.status==='입금확인')?'입금대기':'입금확인'); };
 window.toggleDone=id=>{ const o=orders.find(x=>x.id===id); change(id,o.status==='수령완료'?'입금확인':'수령완료'); };
 window.del=async id=>{ const o=orders.find(x=>x.id===id); if(!confirm('#'+o.no+' 주문을 삭제할까요?')) return;
   try{ await removeOrder(id); }catch(e){ alert('삭제 실패: '+(e.code||e.message)); } };
@@ -97,24 +129,44 @@ function renderRv(list){
 }
 window.delRv=async id=>{ if(!confirm('이 후기를 삭제할까요?')) return; try{ await removeReview(id); }catch(e){ alert('삭제 실패: '+(e.code||e.message)); } };
 
+const STEPS=['💰 송금확인','📋 주문확인','🍜 음식 나옴','✅ 최종완료'];
+function stageOf(st){ return ({'입금대기':0,'송금완료':0,'입금확인':1,'조리중':2,'조리완료':3,'수령완료':4})[st] ?? 0; }
+function prevOf(o){ return ({'송금완료':'입금대기','입금확인':'입금대기','조리중':'입금확인','조리완료':'조리중','수령완료':'조리완료'})[o.status]; }
 function render(){
   const done=orders.filter(o=>o.status==='수령완료'), todo=orders.filter(o=>o.status!=='수령완료');
-  const paid=orders.filter(o=>o.status!=='입금대기');
-  const cnt={}; todo.forEach(o=>itemsOf(o).forEach(i=>cnt[i.name]=(cnt[i.name]||0)+i.qty));
+  const paid=orders.filter(o=>stageOf(o.status)>=1);
+  const sent=orders.filter(o=>o.status==='송금완료');
+  const waiting=orders.filter(o=>o.status==='조리완료');
+  const cnt={}; orders.filter(o=>stageOf(o.status)<=2).forEach(o=>itemsOf(o).forEach(i=>cnt[i.name]=(cnt[i.name]||0)+i.qty));
   $('cTodo').textContent=todo.length; $('cDone').textContent=done.length;
   $('stats').innerHTML=`<div>총 주문<b>${orders.length}건</b></div><div>총 매출<b>${won(orders.reduce((a,o)=>a+o.total,0))}</b></div><div>입금 확인액<b>${won(paid.reduce((a,o)=>a+o.total,0))}</b></div>`
+    + (sent.length?`<div style="grid-column:1/-1;background:#e9f7ee;border-color:#bfe6cc">🔔 송금했다는 주문 <b style="font-size:16px;color:#1f9d55">${sent.map(o=>'#'+o.no+' '+esc(o.name)).join(' · ')}</b>통장 확인 후 '송금 확인했어요' 눌러주세요</div>`:'')
+    + (waiting.length?`<div style="grid-column:1/-1;background:#fff1e8;border-color:#ffd0b5">🙋 음식 나왔는데 아직 안 가져간 주문 <b style="font-size:16px;color:#ff6b2c">${waiting.map(o=>'#'+o.no+' '+esc(o.name)).join(' · ')}</b></div>`:'')
     + (Object.keys(cnt).length?`<div style="grid-column:1/-1">🔥 지금 만들어야 할 것<b style="font-size:16px">${Object.entries(cnt).map(([k,v])=>`${esc(k)} ${v}`).join(' · ')}</b></div>`:'');
   const list = filter==='todo' ? [...todo].sort((a,b)=>a.no-b.no) : filter==='done' ? done : orders;
   $('list').innerHTML = list.length ? list.map(o=>{
-    const isDone=o.status==='수령완료', isPaid=o.status!=='입금대기';
-    return `<div class="o ${isDone?'done':''}">
+    const st=o.status, onsite=o.pay==='현장결제', stage=stageOf(st);
+    let step, btn, cls, next;
+    if(stage===0){
+      if(st==='송금완료'){ step='🔔 손님이 송금했대요! 통장 확인하세요'; btn='💰 송금 확인했어요'; cls='go-sent'; }
+      else if(onsite){ step='💵 현장결제 — 돈 받으세요'; btn='💵 돈 받았어요'; cls='go-pay'; }
+      else { step='⏳ 손님 송금 기다리는 중 (통장 확인)'; btn='💰 송금 확인했어요'; cls='go-pay'; }
+      next='입금확인';
+    } else if(stage===1){ step='📋 결제 OK! 주문 확인하고 조리 시작'; btn='📋 주문 확인 (조리 시작)'; cls='go-cook'; next='조리중'; }
+    else if(stage===2){ step='👨‍🍳 조리 중… 다 되면 눌러주세요'; btn='🍜 음식 나왔어요 (손님 호출)'; cls='go-food'; next='조리완료'; }
+    else if(stage===3){ step='🙋 손님 호출됨 — 음식 건네주면 완료'; btn='✅ 최종 완료 (손님이 받아감)'; cls='go-done'; next='수령완료'; }
+    else { step='✅ 끝난 주문'; btn=null; }
+    const prog = STEPS.map((s,i)=>`<span class="ps ${i<stage?'ok':i===stage?'now':''}">${s}</span>`).join('<span class="pa">›</span>');
+    return `<div class="o ${st==='수령완료'?'done':''} ${st==='송금완료'||st==='조리완료'?'hot':''}">
       <div class="row"><div><span class="no">#${o.no}</span> <span class="nm">${esc(o.name)}</span></div><div class="t">🕒 ${kst(o.createdAt)}</div></div>
       <div class="items">${itemsOf(o).map(i=>`${esc(i.name)} <b>×${i.qty}</b>`).join(' · ')}</div>
-      <div class="row"><b>${won(o.total)}</b><span class="t">${esc(o.status)}</span></div>
-      <div class="acts">
-        <button class="pay ${isPaid?'yes':''}" onclick="togglePay('${o.id}')">${isPaid?'💰 입금확인됨':'💸 입금 미확인'}</button>
-        <button class="fin ${isDone?'undo':''}" onclick="toggleDone('${o.id}')">${isDone?'↩ 미완으로':'✅ 완료'}</button>
-        <button class="del" onclick="del('${o.id}')">🗑</button>
+      <div class="row"><b style="font-size:20px">${won(o.total)}</b><span class="paym">${onsite?'💵 현장결제':o.pay?'💳 계좌이체':''}</span></div>
+      <div class="prog">${prog}</div>
+      <div class="step">${step}</div>
+      ${btn?`<button class="big ${cls}" onclick="change('${o.id}','${next}')">${btn}</button>`:''}
+      <div class="mini">
+        ${prevOf(o)?`<button onclick="change('${o.id}','${prevOf(o)}')">↩ 한 단계 되돌리기</button>`:''}
+        <button onclick="del('${o.id}')">🗑 삭제</button>
       </div></div>`;}).join('') : `<div class="empty">${filter==='todo'?'미완 주문이 없어요 🎉':'주문이 없어요'}</div>`;
 }
 </script></body></html>

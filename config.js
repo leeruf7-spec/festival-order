@@ -17,7 +17,13 @@ export const ADMIN_EMAIL = 'admin@festival-order.com';
 export const BANK = 'KB국민은행';        // 화면 표시용
 export const TOSS_BANK = '국민은행';     // 토스 송금 링크용
 export const ACCOUNT = '93350200849891'; // 하이픈 없이
-export const HOLDER = '';                // 예금주 (선택)
+export const HOLDER = '';
+
+// 송금 앱 바로가기
+// 토스아이디가 있으면 적기 (예: 'mir2026') → toss.me/아이디/금액 으로 금액까지 자동 입력. 비우면 토스 앱 송금화면으로 연결
+export const TOSS_ID = '';
+// 카카오페이 송금 링크 (카카오페이 앱 → 송금 → '송금코드' 또는 '링크 복사'로 받은 https://qr.kakaopay.com/... 주소)
+export const KAKAOPAY_LINK = '';                // 예금주 (선택)
 
 // 5) 휴대폰 푸시 알림: ntfy 앱에서 이 주제를 구독한 폰 전부에 알림 (끄려면 '')
 export const NTFY_TOPIC = 'festival-order-3e841809';
@@ -25,9 +31,12 @@ export const NTFY_TOPIC = 'festival-order-3e841809';
 // 6) 주문 후 몇 분 뒤에 손님 폰에 '음식 나왔어요' 알람 (관리자가 '완료' 누르면 그 즉시 울림)
 export const READY_MINUTES = 5;
 
-// 4) 메뉴 — 가격 바꾸면 firestore.rules의 가격도 같이 바꿀 것!
+// 7) 타임세일 (한국시간, 매일) — 바꾸면 firestore.rules의 inSale()과 세일 가격도 같이 바꿀 것!
+export const SALE = { start: '22:00', end: '22:30', prices: { udon: 3000, set: 6000 } };
+
+// 4) 메뉴 (wait = 조리 대기 시간, 분) — 가격 바꾸면 firestore.rules의 가격도 같이 바꿀 것!
 export const MENU = [
-  { key: 'udon',  name: '우동',     price: 4000, emoji: '🍜' },
-  { key: 'mandu', name: '뿌링만두', price: 3500, emoji: '🥟' },
-  { key: 'set',   name: '세트 (우동+뿌링만두)', price: 7000, emoji: '🎁', note: '500원 할인' },
+  { key: 'udon',  name: '우동',     price: 4000, emoji: '🍜', wait: 2 },
+  { key: 'mandu', name: '뿌링만두', price: 3500, emoji: '🥟', wait: 5 },
+  { key: 'set',   name: '세트 (우동+뿌링만두)', price: 7000, emoji: '🎁', note: '500원 할인', wait: 5 },
 ];

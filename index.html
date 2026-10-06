@@ -77,15 +77,44 @@
   .ready-t{font-size:24px;font-weight:800}
   .mine{background:#fff6ee;border-radius:12px;padding:12px 10px!important;margin:4px -10px}
   .minetag{font-size:11px;font-weight:800;color:#fff;background:var(--accent);border-radius:99px;padding:2px 7px;margin-left:4px;vertical-align:middle}
+  .paysel{display:flex;gap:8px}
+  .paysel button{flex:1;border:2px solid var(--line);background:#fffdfa;border-radius:14px;padding:12px 8px;font-size:16px;font-weight:800;cursor:pointer;color:var(--ink)}
+  .paysel button small{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-top:3px}
+  .paysel button.on{border-color:var(--accent);background:#fff1e8}
+  .okline{font-weight:800;color:var(--ok)}
+  .acct .lbl{font-size:13px;color:var(--muted)}
+  .acct .amt{font-size:34px;font-weight:900;color:var(--accent)}
+  .acct .acctno{font-size:24px;font-weight:900;letter-spacing:1px;margin-top:2px}
+  .acct .hint{font-size:13px;margin-top:8px;color:var(--ink)}
+  .tosslink{display:block;margin:10px 0 2px;font-size:14px;color:var(--blue);font-weight:700;text-decoration:none}
+  .btn.sent{background:var(--ok)}
+  .paytag{font-size:11px;font-weight:700;border-radius:99px;padding:2px 7px;margin-left:4px;background:#f3ebe2;color:var(--muted);vertical-align:middle}
+  .s-송금완료{background:#e9f7ee;color:var(--ok)}
+  .salebar{max-width:520px;margin:4px auto 0;background:#fff;border:2px dashed var(--accent);border-radius:14px;padding:12px 14px;text-align:center;font-size:15px;line-height:1.5}
+  .salebar.on{background:#e8261b;color:#fff;border:0;animation:salepulse 1.2s infinite alternate}
+  @keyframes salepulse{to{background:#ff6b2c}}
+  .saletag{font-size:11px;font-weight:800;color:#fff;background:#e8261b;border-radius:99px;padding:1px 6px}
+  .waitline{margin:8px auto 0;display:inline-block;background:#fff1d6;color:#b26b00;font-weight:800;font-size:14px;border-radius:99px;padding:6px 12px}
+  .s-조리중{background:#efe7ff;color:#7b4dd8}.s-조리완료{background:#ffe1d1;color:#e8261b}.s-입금확인{background:#e2efff;color:#1b64da}
+  .acctbox{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 12px}
+  .acctbox small{display:block;font-size:12px;color:var(--muted)}
+  .acctbox b{font-size:16px;letter-spacing:.3px}
+  .acctbox button{border:0;border-radius:10px;padding:9px 14px;font-weight:800;background:var(--ink);color:#fff;cursor:pointer;white-space:nowrap}
+  .payapps{display:flex;gap:8px;margin-top:4px}
+  .payapp{flex:1;display:block;text-decoration:none;border-radius:14px;padding:14px 6px;font-size:17px;font-weight:900;line-height:1.25;text-align:center}
+  .toss-b{background:#3182f6;color:#fff}
+  .kakao-b{background:#FEE500;color:#191919}
+  .payhint{font-size:12px;color:var(--muted);margin:6px 0 2px;min-height:14px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>🍜 축제 분식 주문</h1>
-    <p>이름 입력 → 메뉴 선택 → 주문하기 → 계좌 송금</p>
-    <a class="runby" href="https://jnumir.netlify.app/" target="_blank" rel="noopener">🚀 운영 · <b>전남대 여수 창업동아리</b> ›</a>
+    <p>이름 입력 → 메뉴 선택 → 결제 방법 → 주문하기</p>
+    <a class="runby" href="https://jnumir.netlify.app/" target="_blank" rel="noopener">🚀 운영 · <b>전남대 광주캠퍼스 창업동아리 미르</b> ›</a>
   </header>
+  <div class="salebar" id="salebar" style="display:none"></div>
 
   <div class="card">
     <label class="t" for="name">주문자 이름</label>
@@ -95,7 +124,19 @@
   <div class="card" id="menu"></div>
 
   <div class="card">
-    <h2>📋 주문 현황 <small id="updated"></small></h2>
+    <label class="t">결제 방법</label>
+    <div class="paysel" id="paysel">
+      <button data-paym="계좌이체" class="on">💳 계좌이체<small>주문 후 바로 송금</small></button>
+      <button data-paym="현장결제">💵 현장결제<small>부스에서 현금·카드</small></button>
+    </div>
+    <div class="acctbox" id="acctbox">
+      <div><small>입금 계좌</small><b id="acctLine"></b></div>
+      <button id="acctCopy">복사</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="boardTitle">🧾 내 주문 <small id="updated"></small></h2>
     <div id="board"><div class="empty">불러오는 중…</div></div>
   </div>
 
@@ -110,7 +151,7 @@
 
   <div class="card club">
     <div class="club-tag">이 부스는 누가 운영하나요?</div>
-    <h2 style="margin:4px 0 6px">🚀 전남대 여수 창업동아리</h2>
+    <h2 style="margin:4px 0 6px">🚀 전남대 광주캠퍼스 창업동아리 미르</h2>
     <p class="club-q">"창업이 처음이어도 좋습니다.<br>같이 뛸 사람을 찾고 있어요."</p>
     <div class="club-acts">
       <span>🏆 대학 벤처동아리 경진대회</span><span>💡 아이템 고도화 해커톤</span>
@@ -121,7 +162,7 @@
   </div>
 </div>
 
-<div style="text-align:center;margin:6px 0 20px"><a href="/admin.html" style="color:var(--muted);font-size:13px;text-decoration:none">🔒 관리자</a></div>
+<div style="max-width:520px;margin:6px auto 24px;padding:0 16px"><a href="/admin.html" style="display:block;text-align:center;background:#2b1d12;color:#fff;font-size:17px;font-weight:800;padding:16px;border-radius:14px;text-decoration:none">🔒 관리자 모드 (운영진 전용)</a></div>
 
 <div class="bar"><div class="in">
   <div class="sum"><small id="count">메뉴를 선택해주세요</small><b id="total">0원</b></div>
@@ -129,22 +170,37 @@
 </div></div>
 
 <div class="modal" id="modal"><div class="sheet">
-  <div>주문이 접수됐어요!</div>
+  <div class="okline">✅ 주문 접수 완료</div>
   <div class="big" id="mNo">#0</div>
   <div id="mSummary" style="color:var(--muted);font-size:14px"></div>
-  <div class="acct">
-    <div id="mBank"></div>
-    <b id="mAcct"></b>
-    <div style="margin-top:6px">송금 금액 <b id="mTotal" style="color:var(--accent)"></b></div>
-    <div style="font-size:12px;color:var(--muted);margin-top:6px">입금자명은 주문자 이름으로 해주세요</div>
+  <div id="mWait" class="waitline"></div>
+  <div id="payTransfer">
+    <div class="acct">
+      <div class="lbl">아래 계좌로 보내주세요</div>
+      <div class="amt" id="mTotal"></div>
+      <div id="mBank" style="margin-top:6px"></div>
+      <div class="acctno" id="mAcct"></div>
+      <div class="hint">입금자명은 <b>주문자 이름</b>으로!</div>
+    </div>
+    <div class="payapps">
+      <a id="tossLink" class="payapp toss-b">토스로<br>송금</a>
+      <a id="kakaoLink" class="payapp kakao-b">카카오페이로<br>송금</a>
+    </div>
+    <div class="payhint" id="payhint"></div>
+    <button class="btn ghost" id="copyBtn">📋 계좌번호 복사 (다른 은행 앱)</button>
+    <button class="btn sent" id="sentBtn">✅ 송금했어요</button>
   </div>
-  <a id="tossLink"><button class="btn toss">토스로 바로 송금하기</button></a>
-  <button class="btn ghost" id="copyBtn">계좌번호 + 금액 복사</button>
+  <div id="payOnsite" style="display:none">
+    <div class="acct">
+      <div class="amt" id="mTotal2"></div>
+      <div style="margin-top:6px;line-height:1.6">부스에서 주문번호 <b id="mNo2"></b>을 말하고<br>현금·카드로 결제해주세요</div>
+    </div>
+  </div>
   <button class="btn ghost" id="closeBtn">닫기</button>
 </div></div>
 <div class="toast" id="toast"></div>
 <div class="ready" id="ready"><div class="ready-box">
-  <div style="font-size:64px">🍜</div>
+  <div id="readyMascot" style="width:150px;margin:0 auto"></div>
   <div class="ready-no" id="readyNo">#0</div>
   <div class="ready-t" id="readyT">음식이 나왔어요!</div>
   <div style="color:var(--muted);margin:6px 0 18px">부스(후문 7거리 5번)로 와주세요</div>
@@ -153,10 +209,23 @@
 
 <script type="module">
 import * as CFG from './config.js';
+import { mascotSVG, MASCOT_CSS } from './mascot.js';
 const { BANK, TOSS_BANK, ACCOUNT, HOLDER, MENU } = CFG;
+const TOSS_ID = CFG.TOSS_ID || '';
+const KAKAOPAY_LINK = CFG.KAKAOPAY_LINK || '';
 const NTFY_TOPIC = CFG.NTFY_TOPIC || '';
 const READY_MINUTES = CFG.READY_MINUTES || 5;
-import { configured, createOrder, watchOrders, itemsOf, addReview, watchReviews } from './db.js';
+const SALE = CFG.SALE || null;
+// ---- 타임세일 (한국시간 기준)
+const hm = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+function kstMinutes(d = new Date()){ const k = new Date(d.getTime() + 9*3600e3); return k.getUTCHours()*60 + k.getUTCMinutes() + k.getUTCSeconds()/60; }
+function inSale(d){ if(!SALE) return false; const x = kstMinutes(d); return x >= hm(SALE.start) && x < hm(SALE.end); }
+const priceOf = m => inSale() && SALE.prices[m.key] != null ? SALE.prices[m.key] : m.price;
+// 주문별 대기 시간 = 담은 메뉴 중 가장 오래 걸리는 것
+const waitOf = o => Math.max(1, ...MENU.filter(m => (o.qty?.[m.key]||0) > 0).map(m => m.wait || READY_MINUTES));
+const etaOf = o => o.createdAt.getTime() + waitOf(o) * 60000;
+function salePrices(){ return Object.fromEntries(MENU.map(m => [m.key, priceOf(m)])); }
+import { configured, createOrder, watchOrders, watchOrder, onAdmin, itemsOf, addReview, watchReviews, markSent } from './db.js';
 
 const qty = Object.fromEntries(MENU.map(m => [m.key, 0]));
 const $ = id => document.getElementById(id);
@@ -171,10 +240,10 @@ function renderMenu(){
   $('menu').innerHTML = '<label class="t">메뉴 선택</label>' + MENU.map(m => `
     <div class="item">
       <div class="emoji">${m.emoji}</div>
-      <div class="info"><b>${m.name}</b><div>${won(m.price)}${m.note?` · <span style="color:var(--accent);font-weight:700">${m.note}</span>`:''}</div></div>
+      <div class="info"><b>${m.name}</b><div>${priceOf(m)!==m.price?`<s style="color:var(--muted)">${won(m.price)}</s> <b style="color:#e8261b">${won(priceOf(m))}</b>`:won(m.price)}${m.wait?` · <span style="color:var(--muted)">⏱ 약 ${m.wait}분</span>`:''}${m.note && priceOf(m)===m.price?` · <span style="color:var(--accent);font-weight:700">${m.note}</span>`:''}</div></div>
       <div class="qty">
         <button data-k="${m.key}" data-d="-1" aria-label="${m.name} 빼기">−</button>
-        <span id="q-${m.key}">0</span>
+        <span id="q-${m.key}">${qty[m.key]}</span>
         <button data-k="${m.key}" data-d="1" aria-label="${m.name} 추가">+</button>
       </div>
     </div>`).join('');
@@ -187,7 +256,7 @@ function renderMenu(){
 
 function totals(){
   let total=0, count=0;
-  for(const m of MENU){ total += m.price*qty[m.key]; count += qty[m.key]; }
+  for(const m of MENU){ total += priceOf(m)*qty[m.key]; count += qty[m.key]; }
   return { total, count };
 }
 function updateBar(){
@@ -210,20 +279,22 @@ function beep(){ try{ unlockAudio(); [0,0.2,0.4].forEach(t=>{ const o=actx.creat
 let alerted = new Set();
 try { alerted = new Set(JSON.parse(localStorage.getItem('alerted') || '[]')); } catch {}
 function markAlerted(id){ alerted.add(id); try { localStorage.setItem('alerted', JSON.stringify([...alerted].slice(-20))); } catch {} }
-function foodReady(o){
-  if (alerted.has(o.id)) return;
-  markAlerted(o.id);
+function foodReady(o, real = true){
+  const key = real ? o.id : o.id + ':soon';
+  if (alerted.has(key) || alerted.has(o.id)) return;
+  markAlerted(key);
   $('readyNo').textContent = '#' + o.no;
-  $('readyT').textContent = `${o.name}님, 음식이 나왔어요!`;
+  $('readyT').textContent = real ? `${o.no}번 주문 나왔습니다!` : `${o.no}번 주문 곧 나와요!`;
   $('ready').classList.add('on');
   document.title = `🔔 #${o.no} 음식 나왔어요!`;
+  sysNotify(o);
   beep(); clearInterval(alarmTimer); alarmTimer = setInterval(beep, 2500);
 }
 // 주문 후 READY_MINUTES분 지나면 자동 알람
 setInterval(() => {
   const now = Date.now();
   for (const o of boardOrders) {
-    if (myIds.has(o.id) && !alerted.has(o.id) && o.status !== '수령완료' && now - o.createdAt.getTime() >= READY_MINUTES * 60000) foodReady(o);
+    if (myIds.has(o.id) && !alerted.has(o.id) && !alerted.has(o.id+':soon') && o.status !== '조리완료' && o.status !== '수령완료' && now >= etaOf(o)) foodReady(o, false);
   }
   // 내 주문 남은 시간 표시
   document.querySelectorAll('[data-eta]').forEach(el => {
@@ -233,32 +304,53 @@ setInterval(() => {
 }, 5000);
 $('readyOk').onclick = () => { $('ready').classList.remove('on'); clearInterval(alarmTimer); document.title = '축제 분식 주문'; };
 
+// 주문 현황은 익명: 김철수 → 김*수 (내 주문만 실명)
+const mask = n => { n = String(n); return n.length <= 1 ? n : n.length === 2 ? n[0] + '*' : n[0] + '*'.repeat(n.length - 2) + n[n.length - 1]; };
 function renderBoard(orders){
   boardOrders = orders;
   for (const o of orders) {
-    if (myIds.has(o.id) && prevStatus[o.id] && prevStatus[o.id] !== '수령완료' && o.status === '수령완료') foodReady(o);
-    if (myIds.has(o.id) && !prevStatus[o.id] && o.status === '수령완료') markAlerted(o.id); // 이미 받은 주문은 다시 안 울림
+    const isOut = s => s === '조리완료' || s === '수령완료';
+    if (myIds.has(o.id) && prevStatus[o.id] && !isOut(prevStatus[o.id]) && isOut(o.status)) foodReady(o, true);
+    if (myIds.has(o.id) && !prevStatus[o.id] && isOut(o.status)) { markAlerted(o.id); markAlerted(o.id+':soon'); } // 이미 받은 주문은 다시 안 울림
     prevStatus[o.id] = o.status;
   }
   $('board').innerHTML = orders.length ? orders.map(o => `
     <div class="order ${myIds.has(o.id)?'mine':''}">
-      <div class="top"><div><span class="no">#${o.no}</span> <span class="nm">${esc(o.name)}</span>${myIds.has(o.id)?'<span class="minetag">내 주문</span>':''}</div>
-      <span class="chip s-${esc(o.status)}">${o.status==='수령완료'?'🍜 나왔어요':esc(o.status)}</span></div>
+      <div class="top"><div><span class="no">#${o.no}</span> <span class="nm">${esc(myIds.has(o.id) || isAdminView ? o.name : mask(o.name))}</span>${myIds.has(o.id)?'<span class="minetag">내 주문</span>':''}${o.pay?`<span class="paytag">${o.pay==='현장결제'?'💵 현장':'💳 이체'}</span>`:''}</div>
+      <span class="chip s-${esc(o.status)}">${({'조리중':'👨‍🍳 조리 중','조리완료':'🍜 나왔어요!','수령완료':'✅ 완료','입금확인':'💰 결제완료','송금완료':'송금 확인중'})[o.status]||esc(o.status)}</span></div>
       <div class="menu">${itemsOf(o).map(i=>`${esc(i.name)} ${i.qty}개`).join(' · ')} — <b>${won(o.total)}</b></div>
       <div class="meta">🕒 ${kst(o.createdAt)} 주문</div>
-      ${myIds.has(o.id) && o.status!=='수령완료' ? `<div class="meta" style="color:var(--accent);font-weight:700" data-eta="${o.createdAt.getTime()+READY_MINUTES*60000}">⏳ 약 ${Math.max(1,Math.ceil((o.createdAt.getTime()+READY_MINUTES*60000-Date.now())/60000))}분 후 완성 예정</div>` : ''}
-      ${o.status==='입금대기'?`<button class="paybtn" data-pay="${o.id}">💸 ${won(o.total)} 송금하기</button>`:''}
-    </div>`).join('') : '<div class="empty">아직 주문이 없어요. 첫 주문을 해보세요!</div>';
+      ${myIds.has(o.id) && !(o.status==='조리완료'||o.status==='수령완료') ? `<div class="meta" style="color:var(--accent);font-weight:700" data-eta="${etaOf(o)}">⏳ 약 ${Math.max(1,Math.ceil((etaOf(o)-Date.now())/60000))}분 후 완성 예정</div>` : ''}
+      ${o.status==='입금대기' && o.pay!=='현장결제' && myIds.has(o.id)?`<button class="paybtn" data-pay="${o.id}">💸 ${won(o.total)} 송금하기</button>`:''}
+    </div>`).join('') : '<div class="empty">아직 주문 내역이 없어요. 위에서 주문해보세요!</div>';
   $('updated').textContent = '실시간 반영 중';
+}
+
+let payMethod = '계좌이체';
+$('paysel').onclick = e => { const b=e.target.closest('[data-paym]'); if(!b) return; payMethod=b.dataset.paym; document.querySelectorAll('#paysel button').forEach(x=>x.classList.toggle('on',x===b)); $('acctbox').style.display = payMethod==='계좌이체' ? 'flex' : 'none'; };
+$('acctLine').textContent = `${BANK} ${fmtAcct(ACCOUNT)}${HOLDER ? ' (' + HOLDER + ')' : ''}`;
+$('acctCopy').onclick = async () => { try{ await navigator.clipboard.writeText(ACCOUNT); }catch{ const ta=document.createElement('textarea'); ta.value=ACCOUNT; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } toast('계좌번호 복사 완료!'); };
+
+// 폰 알림(화면 밖 알림) — 안드로이드 크롬 등에서 동작
+let swReg = null;
+try { if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').then(r => swReg = r).catch(()=>{}); } catch {}
+function askNotify(){ try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch {} }
+function sysNotify(o){
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const opt = { body: `부스(후문 7거리 5번)로 와주세요`, tag: 'ready-' + o.id, requireInteraction: true, vibrate: [400,150,400,150,400] };
+    if (swReg) swReg.showNotification(`🍜 ${o.no}번 주문 나왔습니다!`, opt); else new Notification(`🍜 ${o.no}번 주문 나왔습니다!`, opt);
+  } catch {}
 }
 
 $('orderBtn').onclick = async () => {
   const name = $('name').value.trim();
   if(!name){ toast('이름을 입력해주세요'); $('name').focus(); return; }
+  askNotify();
   $('orderBtn').disabled = true; $('orderBtn').textContent = '접수 중…';
   try{
-    const o = await createOrder(name, qty);
-    rememberMine(o.id); prevStatus[o.id] = '입금대기'; renderBoard(boardOrders);
+    const o = await createOrder(name, qty, payMethod, salePrices());
+    rememberMine(o.id); prevStatus[o.id] = '입금대기'; watchMine(o.id); renderBoard(boardOrders);
     showPay(o);
     notify(o);
     MENU.forEach(m => { qty[m.key]=0; $('q-'+m.key).textContent='0'; });
@@ -277,19 +369,36 @@ function notify(o){
 let lastOrder = null;
 function showPay(o){
   lastOrder = o;
+  const onsite = o.pay === '현장결제';
   $('mNo').textContent = '#' + o.no;
   $('mSummary').textContent = `${o.name} · ` + itemsOf(o).map(i=>`${i.name} ${i.qty}`).join(', ');
+  $('mWait').textContent = `⏱ 약 ${waitOf(o)}분 기다려주세요 (${MENU.filter(m=>m.key!=='set'&&m.wait).map(m=>m.name+' '+m.wait+'분').join(' · ')})`;
+  $('payTransfer').style.display = onsite ? 'none' : 'block';
+  $('payOnsite').style.display = onsite ? 'block' : 'none';
+  $('mTotal').textContent = $('mTotal2').textContent = won(o.total);
+  $('mNo2').textContent = '#' + o.no;
   $('mBank').textContent = BANK + (HOLDER ? ` (예금주 ${HOLDER})` : '');
   $('mAcct').textContent = fmtAcct(ACCOUNT);
-  $('mTotal').textContent = won(o.total);
-  $('tossLink').href = `supertoss://send?amount=${o.total}&bank=${encodeURIComponent(TOSS_BANK)}&accountNo=${ACCOUNT}`;
+  $('tossLink').href = TOSS_ID ? `https://toss.me/${encodeURIComponent(TOSS_ID)}/${o.total}` : `supertoss://send?amount=${o.total}&bank=${encodeURIComponent(TOSS_BANK)}&accountNo=${ACCOUNT}`;
+  $('kakaoLink').style.display = KAKAOPAY_LINK ? 'block' : 'none';
+  $('payhint').textContent = KAKAOPAY_LINK ? '카카오페이는 금액이 자동 복사돼요 → 앱에서 붙여넣기' : '';
+  $('closeBtn').textContent = onsite ? '확인' : '나중에 보낼게요';
   $('modal').classList.add('on');
 }
 $('copyBtn').onclick = async () => {
-  const text = `${BANK} ${ACCOUNT} ${lastOrder ? lastOrder.total + '원' : ''}`.trim();
+  const text = ACCOUNT;
   try{ await navigator.clipboard.writeText(text); }
   catch{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
-  toast('복사했어요! 은행 앱에 붙여넣기 하세요');
+  toast('계좌번호 복사 완료! 은행 앱에 붙여넣기 하세요');
+};
+async function copyText(t){ try{ await navigator.clipboard.writeText(t); }catch{ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } }
+$('kakaoLink').onclick = e => { e.preventDefault(); if(!lastOrder) return; copyText(String(lastOrder.total)); toast(`${won(lastOrder.total)} 복사! 카카오페이에서 금액에 붙여넣기`); setTimeout(() => location.href = KAKAOPAY_LINK, 600); };
+$('sentBtn').onclick = async () => {
+  if (!lastOrder) return;
+  $('sentBtn').disabled = true;
+  try { await markSent(lastOrder.id); $('modal').classList.remove('on'); toast('송금 확인 요청했어요! 곧 확인해드릴게요 🙏'); }
+  catch(e){ console.error(e); toast('잠시 후 다시 눌러주세요'); }
+  finally { $('sentBtn').disabled = false; }
 };
 $('closeBtn').onclick = () => $('modal').classList.remove('on');
 $('modal').onclick = e => { if(e.target.id==='modal') $('modal').classList.remove('on'); };
@@ -314,10 +423,39 @@ function renderReviews(list){
 }
 drawStars();
 
-renderMenu(); updateBar();
+// 세일 배너 + 세일 시작/종료 시 가격 자동 갱신
+let lastSale = null;
+function saleTick(){
+  if(!SALE) return;
+  const on = inSale(), x = kstMinutes(), s0 = hm(SALE.start), s1 = hm(SALE.end);
+  const items = MENU.filter(m => SALE.prices[m.key] != null).map(m => `${m.name.split(' ')[0]} ${won(SALE.prices[m.key])}`).join(' · ');
+  const bar = $('salebar');
+  if (on) { bar.className='salebar on'; bar.innerHTML = `⏰ <b>타임세일 진행 중!</b> ${items}<br><small>${SALE.end}까지 · 약 ${Math.max(1,Math.ceil(s1-x))}분 남음</small>`; bar.style.display='block'; }
+  else if (x < s0 && s0 - x <= 180) { bar.className='salebar'; bar.innerHTML = `🔔 오늘 밤 <b>${SALE.start}~${SALE.end}</b> 타임세일! ${items}`; bar.style.display='block'; }
+  else bar.style.display='none';
+  if (on !== lastSale) { lastSale = on; renderMenu(); updateBar(); }
+}
+setInterval(saleTick, 15000);
+
+{ const st=document.createElement('style'); st.textContent=MASCOT_CSS; document.head.appendChild(st); $('readyMascot').innerHTML = mascotSVG('r'); $('readyMascot').classList.add('mascot-jump'); }
+renderMenu(); updateBar(); saleTick();
 if(!configured){ $('board').innerHTML = '<div class="empty">config.js에 Firebase 설정을 붙여넣어 주세요.</div>'; }
 else { watchReviews(renderReviews, e=>console.error(e)); }
-if(configured) watchOrders(renderBoard, e => { console.error(e); $('board').innerHTML = '<div class="empty">주문 현황을 불러오지 못했어요.</div>'; });
+// 손님: 내 주문만 / 관리자 로그인 상태: 전체 주문
+let isAdminView = false, unsubAll = null;
+const myMap = {}, myUnsubs = {};
+function emitMine(){ if (!isAdminView) renderBoard(Object.values(myMap).filter(Boolean).sort((a,b) => b.no - a.no)); }
+function watchMine(id){ if (myUnsubs[id]) return; myUnsubs[id] = watchOrder(id, (o) => { myMap[id] = o; emitMine(); }); }
+window.__watchMine = watchMine;
+if (configured) {
+  [...myIds].forEach(watchMine); emitMine();
+  onAdmin(ok => {
+    isAdminView = ok;
+    $('boardTitle').firstChild.textContent = ok ? '📋 전체 주문 (관리자) ' : '🧾 내 주문 ';
+    if (ok && !unsubAll) unsubAll = watchOrders(renderBoard, e => console.error(e));
+    if (!ok && unsubAll) { unsubAll(); unsubAll = null; emitMine(); }
+  });
+}
 </script>
 </body>
 </html>

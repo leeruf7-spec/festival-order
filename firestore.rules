@@ -7,18 +7,26 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email == 'admin@festival-order.com';
     }
 
+    // 타임세일: 한국시간 22:00~22:30 (= UTC 13:00~13:30, 앞뒤 1분 여유)
+    function inSale() {
+      return (request.time.hours() == 13 && request.time.minutes() <= 30)
+        || (request.time.hours() == 12 && request.time.minutes() == 59);
+    }
+
     function okQty(v) { return v is int && v >= 0 && v <= 50; }
 
     function validOrder(d) {
       let q = d.qty;
-      return d.keys().hasOnly(['no', 'name', 'qty', 'total', 'status', 'createdAt'])
-        && d.keys().hasAll(['no', 'name', 'qty', 'total', 'status', 'createdAt'])
+      return d.keys().hasOnly(['no', 'name', 'qty', 'total', 'pay', 'status', 'createdAt'])
+        && d.keys().hasAll(['no', 'name', 'qty', 'total', 'pay', 'status', 'createdAt'])
+        && d.pay in ['계좌이체', '현장결제']
         && d.name is string && d.name.size() >= 1 && d.name.size() <= 20
         && q.keys().hasOnly(['udon', 'mandu', 'set'])
         && q.keys().hasAll(['udon', 'mandu', 'set'])
         && okQty(q.udon) && okQty(q.mandu) && okQty(q.set)
         // ↓ 메뉴 가격 (config.js와 같아야 함)
-        && d.total == q.udon * 4000 + q.mandu * 3500 + q.set * 7000
+        && (d.total == q.udon * 4000 + q.mandu * 3500 + q.set * 7000
+            || (inSale() && d.total == q.udon * 3000 + q.mandu * 3500 + q.set * 6000))
         && d.total > 0
         && d.status == '입금대기'
         && d.createdAt == request.time
@@ -26,11 +34,17 @@ service cloud.firestore {
     }
 
     match /orders/{id} {
-      allow read: if true;
+      // 손님은 자기 주문(주문번호 문서)만 열람, 전체 목록은 관리자만
+      allow get: if true;
+      allow list: if isAdmin();
       allow create: if validOrder(request.resource.data);
-      allow update: if isAdmin()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
-        && request.resource.data.status in ['입금대기', '입금확인', '수령완료'];
+      // 관리자: 상태 변경 / 손님: '송금했어요' (입금대기 → 송금완료)만 가능
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && (
+          (isAdmin() && request.resource.data.status in ['입금대기', '송금완료', '입금확인', '조리중', '조리완료', '수령완료'])
+          || (resource.data.status == '입금대기' && resource.data.get('pay', '') == '계좌이체'
+              && request.resource.data.status == '송금완료')
+        );
       allow delete: if isAdmin();
     }
 
