@@ -14,11 +14,11 @@ service cloud.firestore {
       return d.keys().hasOnly(['no', 'name', 'qty', 'total', 'status', 'createdAt'])
         && d.keys().hasAll(['no', 'name', 'qty', 'total', 'status', 'createdAt'])
         && d.name is string && d.name.size() >= 1 && d.name.size() <= 20
-        && q.keys().hasOnly(['udon', 'mandu', 'eomuk', 'set'])
-        && q.keys().hasAll(['udon', 'mandu', 'eomuk', 'set'])
-        && okQty(q.udon) && okQty(q.mandu) && okQty(q.eomuk) && okQty(q.set)
+        && q.keys().hasOnly(['udon', 'mandu', 'set'])
+        && q.keys().hasAll(['udon', 'mandu', 'set'])
+        && okQty(q.udon) && okQty(q.mandu) && okQty(q.set)
         // ↓ 메뉴 가격 (config.js와 같아야 함)
-        && d.total == q.udon * 4000 + q.mandu * 3500 + q.eomuk * 500 + q.set * 7000
+        && d.total == q.udon * 4000 + q.mandu * 3500 + q.set * 7000
         && d.total > 0
         && d.status == '입금대기'
         && d.createdAt == request.time

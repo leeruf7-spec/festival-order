@@ -69,6 +69,14 @@
   .club-acts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
   .club-acts span{font-size:12px;background:rgba(255,255,255,.12);border-radius:99px;padding:5px 10px}
   .club-btn{display:block;text-align:center;text-decoration:none;background:var(--accent2);color:#2b1d12}
+  .ready{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:rgba(255,107,44,.92);padding:16px;animation:flash 1s infinite alternate}
+  .ready.on{display:flex}
+  @keyframes flash{from{background:rgba(255,107,44,.92)}to{background:rgba(255,178,44,.92)}}
+  .ready-box{background:#fff;border-radius:24px;padding:28px 22px;text-align:center;width:100%;max-width:380px}
+  .ready-no{font-size:56px;font-weight:900;color:var(--accent)}
+  .ready-t{font-size:24px;font-weight:800}
+  .mine{background:#fff6ee;border-radius:12px;padding:12px 10px!important;margin:4px -10px}
+  .minetag{font-size:11px;font-weight:800;color:#fff;background:var(--accent);border-radius:99px;padding:2px 7px;margin-left:4px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -135,9 +143,19 @@
   <button class="btn ghost" id="closeBtn">닫기</button>
 </div></div>
 <div class="toast" id="toast"></div>
+<div class="ready" id="ready"><div class="ready-box">
+  <div style="font-size:64px">🍜</div>
+  <div class="ready-no" id="readyNo">#0</div>
+  <div class="ready-t" id="readyT">음식이 나왔어요!</div>
+  <div style="color:var(--muted);margin:6px 0 18px">부스(후문 7거리 5번)로 와주세요</div>
+  <button class="btn" id="readyOk" style="width:100%">확인했어요</button>
+</div></div>
 
 <script type="module">
-import { BANK, TOSS_BANK, ACCOUNT, HOLDER, MENU, NTFY_TOPIC } from './config.js';
+import * as CFG from './config.js';
+const { BANK, TOSS_BANK, ACCOUNT, HOLDER, MENU } = CFG;
+const NTFY_TOPIC = CFG.NTFY_TOPIC || '';
+const READY_MINUTES = CFG.READY_MINUTES || 5;
 import { configured, createOrder, watchOrders, itemsOf, addReview, watchReviews } from './db.js';
 
 const qty = Object.fromEntries(MENU.map(m => [m.key, 0]));
@@ -180,14 +198,55 @@ function updateBar(){
 }
 
 let boardOrders = [];
+// ---- 내 주문 기억 + 음식 나오면 알람
+let myIds = new Set();
+try { myIds = new Set(JSON.parse(localStorage.getItem('myOrders') || '[]')); } catch {}
+function rememberMine(id){ myIds.add(id); try { localStorage.setItem('myOrders', JSON.stringify([...myIds].slice(-20))); } catch {} }
+const prevStatus = {};
+let actx = null, alarmTimer = null;
+function unlockAudio(){ try{ actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); }catch{} }
+document.addEventListener('click', unlockAudio);
+function beep(){ try{ unlockAudio(); [0,0.2,0.4].forEach(t=>{ const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=t===0.4?1320:988; o.connect(g); g.connect(actx.destination); g.gain.setValueAtTime(0.35,actx.currentTime+t); g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+t+0.18); o.start(actx.currentTime+t); o.stop(actx.currentTime+t+0.2); }); }catch{} try{ navigator.vibrate && navigator.vibrate([400,150,400,150,400]); }catch{} }
+let alerted = new Set();
+try { alerted = new Set(JSON.parse(localStorage.getItem('alerted') || '[]')); } catch {}
+function markAlerted(id){ alerted.add(id); try { localStorage.setItem('alerted', JSON.stringify([...alerted].slice(-20))); } catch {} }
+function foodReady(o){
+  if (alerted.has(o.id)) return;
+  markAlerted(o.id);
+  $('readyNo').textContent = '#' + o.no;
+  $('readyT').textContent = `${o.name}님, 음식이 나왔어요!`;
+  $('ready').classList.add('on');
+  document.title = `🔔 #${o.no} 음식 나왔어요!`;
+  beep(); clearInterval(alarmTimer); alarmTimer = setInterval(beep, 2500);
+}
+// 주문 후 READY_MINUTES분 지나면 자동 알람
+setInterval(() => {
+  const now = Date.now();
+  for (const o of boardOrders) {
+    if (myIds.has(o.id) && !alerted.has(o.id) && o.status !== '수령완료' && now - o.createdAt.getTime() >= READY_MINUTES * 60000) foodReady(o);
+  }
+  // 내 주문 남은 시간 표시
+  document.querySelectorAll('[data-eta]').forEach(el => {
+    const left = Math.ceil((Number(el.dataset.eta) - now) / 60000);
+    el.textContent = left > 0 ? `⏳ 약 ${left}분 후 완성 예정` : '🔔 곧 나와요! 부스로 와주세요';
+  });
+}, 5000);
+$('readyOk').onclick = () => { $('ready').classList.remove('on'); clearInterval(alarmTimer); document.title = '축제 분식 주문'; };
+
 function renderBoard(orders){
   boardOrders = orders;
+  for (const o of orders) {
+    if (myIds.has(o.id) && prevStatus[o.id] && prevStatus[o.id] !== '수령완료' && o.status === '수령완료') foodReady(o);
+    if (myIds.has(o.id) && !prevStatus[o.id] && o.status === '수령완료') markAlerted(o.id); // 이미 받은 주문은 다시 안 울림
+    prevStatus[o.id] = o.status;
+  }
   $('board').innerHTML = orders.length ? orders.map(o => `
-    <div class="order">
-      <div class="top"><div><span class="no">#${o.no}</span> <span class="nm">${esc(o.name)}</span></div>
-      <span class="chip s-${esc(o.status)}">${esc(o.status)}</span></div>
+    <div class="order ${myIds.has(o.id)?'mine':''}">
+      <div class="top"><div><span class="no">#${o.no}</span> <span class="nm">${esc(o.name)}</span>${myIds.has(o.id)?'<span class="minetag">내 주문</span>':''}</div>
+      <span class="chip s-${esc(o.status)}">${o.status==='수령완료'?'🍜 나왔어요':esc(o.status)}</span></div>
       <div class="menu">${itemsOf(o).map(i=>`${esc(i.name)} ${i.qty}개`).join(' · ')} — <b>${won(o.total)}</b></div>
       <div class="meta">🕒 ${kst(o.createdAt)} 주문</div>
+      ${myIds.has(o.id) && o.status!=='수령완료' ? `<div class="meta" style="color:var(--accent);font-weight:700" data-eta="${o.createdAt.getTime()+READY_MINUTES*60000}">⏳ 약 ${Math.max(1,Math.ceil((o.createdAt.getTime()+READY_MINUTES*60000-Date.now())/60000))}분 후 완성 예정</div>` : ''}
       ${o.status==='입금대기'?`<button class="paybtn" data-pay="${o.id}">💸 ${won(o.total)} 송금하기</button>`:''}
     </div>`).join('') : '<div class="empty">아직 주문이 없어요. 첫 주문을 해보세요!</div>';
   $('updated').textContent = '실시간 반영 중';
@@ -199,6 +258,7 @@ $('orderBtn').onclick = async () => {
   $('orderBtn').disabled = true; $('orderBtn').textContent = '접수 중…';
   try{
     const o = await createOrder(name, qty);
+    rememberMine(o.id); prevStatus[o.id] = '입금대기'; renderBoard(boardOrders);
     showPay(o);
     notify(o);
     MENU.forEach(m => { qty[m.key]=0; $('q-'+m.key).textContent='0'; });

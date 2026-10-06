@@ -22,10 +22,12 @@ export const HOLDER = '';                // 예금주 (선택)
 // 5) 휴대폰 푸시 알림: ntfy 앱에서 이 주제를 구독한 폰 전부에 알림 (끄려면 '')
 export const NTFY_TOPIC = 'festival-order-3e841809';
 
+// 6) 주문 후 몇 분 뒤에 손님 폰에 '음식 나왔어요' 알람 (관리자가 '완료' 누르면 그 즉시 울림)
+export const READY_MINUTES = 5;
+
 // 4) 메뉴 — 가격 바꾸면 firestore.rules의 가격도 같이 바꿀 것!
 export const MENU = [
   { key: 'udon',  name: '우동',     price: 4000, emoji: '🍜' },
   { key: 'mandu', name: '뿌링만두', price: 3500, emoji: '🥟' },
-  { key: 'eomuk', name: '어묵',     price: 500,  emoji: '🍢' },
   { key: 'set',   name: '세트 (우동+뿌링만두)', price: 7000, emoji: '🎁', note: '500원 할인' },
 ];
