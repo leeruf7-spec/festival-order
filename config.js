@@ -31,12 +31,15 @@ export const NTFY_TOPIC = 'festival-order-3e841809';
 // 6) 주문 후 몇 분 뒤에 손님 폰에 '음식 나왔어요' 알람 (관리자가 '완료' 누르면 그 즉시 울림)
 export const READY_MINUTES = 5;
 
+// 8) 손님 폰 푸시 알림 (테이블링처럼 앱 밖에서도 알림) — 공개키. 비밀키는 Vercel 환경변수 VAPID_PRIVATE_KEY에
+export const VAPID_PUBLIC_KEY = 'BK54-vc9bxllW5G3ie5ADI1_oyY3nphMwK-0vIrPOwdXF0aQeJcIXR7aG8iO0DGoHN6Fa-4H06PxXOnCPZ6J4Vs';
+
 // 7) 타임세일 (한국시간, 매일) — 바꾸면 firestore.rules의 inSale()과 세일 가격도 같이 바꿀 것!
 export const SALE = { start: '22:00', end: '22:30', prices: { udon: 3000, set: 6000 } };
 
 // 4) 메뉴 (wait = 조리 대기 시간, 분) — 가격 바꾸면 firestore.rules의 가격도 같이 바꿀 것!
 export const MENU = [
-  { key: 'udon',  name: '우동',     price: 4000, emoji: '🍜', wait: 2 },
-  { key: 'mandu', name: '뿌링만두', price: 3500, emoji: '🥟', wait: 5 },
-  { key: 'set',   name: '세트 (우동+뿌링만두)', price: 7000, emoji: '🎁', note: '500원 할인', wait: 5 },
+  { key: 'udon',  name: '우동',     en: 'Udon', price: 4000, emoji: '🍜', wait: 2 },
+  { key: 'mandu', name: '뿌링만두', en: 'Bburinkle Dumplings', price: 3500, emoji: '🥟', wait: 5 },
+  { key: 'set',   name: '세트 (우동+뿌링만두)', en: 'Set (Udon + Dumplings)', price: 7000, emoji: '🎁', note: '500원 할인', noteEn: '₩500 off', wait: 5 },
 ];

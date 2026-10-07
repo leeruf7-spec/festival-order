@@ -61,6 +61,15 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // 손님 폰 푸시 구독정보: 손님은 자기 주문에 1번 등록만, 읽기는 관리자만
+    match /push/{id} {
+      allow create: if exists(/databases/$(database)/documents/orders/$(id))
+        && request.resource.data.keys().hasOnly(['sub', 'createdAt'])
+        && request.resource.data.sub is string && request.resource.data.sub.size() < 3000
+        && request.resource.data.createdAt == request.time;
+      allow read, delete: if isAdmin();
+    }
+
     match /meta/counter {
       allow read: if true;
       allow create: if request.resource.data.keys().hasOnly(['n']) && request.resource.data.n == 1;

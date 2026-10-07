@@ -75,7 +75,7 @@
 </div>
 
 <script type="module">
-import { configured, adminLogin, adminLogout, onAdmin, watchOrders, setStatus, removeOrder, itemsOf, watchReviews, removeReview } from './db.js';
+import { configured, adminLogin, adminLogout, onAdmin, watchOrders, setStatus, removeOrder, itemsOf, watchReviews, removeReview, sendReadyPush } from './db.js';
 const $=id=>document.getElementById(id);
 const won=n=>n.toLocaleString('ko-KR')+'원';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -117,7 +117,11 @@ if(configured) onAdmin(ok=>{
 });
 
 window.change=change;
-async function change(id,status){ try{ await setStatus(id,status); }catch(e){ alert('변경 실패: '+(e.code||e.message)); } }
+async function change(id,status){
+  try{ await setStatus(id,status); }catch(e){ alert('변경 실패: '+(e.code||e.message)); return; }
+  if(status==='조리완료'){ sendReadyPush(id).then(r=>{ const o=orders.find(x=>x.id===id); if(r&&r.ok) toastA(`📲 #${o?o.no:''} 손님 폰으로 알림 보냈어요`); }).catch(()=>{}); }
+}
+function toastA(t){ const el=document.createElement('div'); el.className='newpop'; el.style.borderLeftColor='#1f9d55'; el.innerHTML=`<div class="np-i">${t}</div>`; $('pops').prepend(el); setTimeout(()=>el.remove(),3500); }
 window.togglePay=id=>{ const o=orders.find(x=>x.id===id); change(id,(o.status==='입금확인')?'입금대기':'입금확인'); };
 window.toggleDone=id=>{ const o=orders.find(x=>x.id===id); change(id,o.status==='수령완료'?'입금확인':'수령완료'); };
 window.del=async id=>{ const o=orders.find(x=>x.id===id); if(!confirm('#'+o.no+' 주문을 삭제할까요?')) return;

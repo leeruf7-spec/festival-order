@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>축제 분식 주문</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="미르 분식">
+<meta name="theme-color" content="#ff6b2c">
 <style>
   :root{--bg:#fff8ef;--card:#fff;--ink:#2b1d12;--muted:#8a7765;--line:#f0e1cf;--accent:#ff6b2c;--accent2:#ffb22c;--ok:#1f9d55;--blue:#3182f6}
   *{box-sizing:border-box}
@@ -105,33 +111,38 @@
   .toss-b{background:#3182f6;color:#fff}
   .kakao-b{background:#FEE500;color:#191919}
   .payhint{font-size:12px;color:var(--muted);margin:6px 0 2px;min-height:14px}
+  .langbtn{position:absolute;right:0;top:-8px;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-weight:900;font-size:13px;cursor:pointer;color:var(--ink)}
+  .pushline{font-size:13px;margin:8px 0 0;line-height:1.5;color:var(--ink)}
+  .iosbar{background:#fff;border:2px solid #3182f6;border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.5;margin:10px 0}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>🍜 축제 분식 주문</h1>
-    <p>이름 입력 → 메뉴 선택 → 결제 방법 → 주문하기</p>
-    <a class="runby" href="https://jnumir.netlify.app/" target="_blank" rel="noopener">🚀 운영 · <b>전남대 광주캠퍼스 창업동아리 미르</b> ›</a>
+  <header style="position:relative;padding-top:34px">
+    <button class="langbtn" id="langBtn">EN</button>
+    <h1 data-i18n="title">🍜 축제 분식 주문</h1>
+    <p data-i18n="steps">이름 입력 → 메뉴 선택 → 결제 방법 → 주문하기</p>
+    <a class="runby" data-i18n="runby" href="https://jnumir.netlify.app/" target="_blank" rel="noopener">🚀 운영 · <b>전남대 광주캠퍼스 창업동아리 미르</b> ›</a>
   </header>
   <div class="salebar" id="salebar" style="display:none"></div>
+  <div class="iosbar" id="iosbar" style="display:none"></div>
 
   <div class="card">
-    <label class="t" for="name">주문자 이름</label>
-    <input id="name" type="text" maxlength="20" placeholder="예) 홍길동" autocomplete="name">
+    <label class="t" for="name" data-i18n="nameLbl">주문자 이름</label>
+    <input id="name" type="text" maxlength="20" placeholder="예) 홍길동" data-i18n-ph="namePh" autocomplete="name">
   </div>
 
   <div class="card" id="menu"></div>
 
   <div class="card">
-    <label class="t">결제 방법</label>
+    <label class="t" data-i18n="payLbl">결제 방법</label>
     <div class="paysel" id="paysel">
-      <button data-paym="계좌이체" class="on">💳 계좌이체<small>주문 후 바로 송금</small></button>
-      <button data-paym="현장결제">💵 현장결제<small>부스에서 현금·카드</small></button>
+      <button data-paym="계좌이체" class="on" data-i18n="payTransfer">💳 계좌이체<small>주문 후 바로 송금</small></button>
+      <button data-paym="현장결제" data-i18n="payOnsite">💵 현장결제<small>부스에서 현금·카드</small></button>
     </div>
     <div class="acctbox" id="acctbox">
-      <div><small>입금 계좌</small><b id="acctLine"></b></div>
-      <button id="acctCopy">복사</button>
+      <div><small data-i18n="acctLbl">입금 계좌</small><b id="acctLine"></b></div>
+      <button id="acctCopy" data-i18n="copy">복사</button>
     </div>
   </div>
 
@@ -141,59 +152,60 @@
   </div>
 
   <div class="card">
-    <h2>⭐ 후기 남기기 <span class="avg" id="avg"></span></h2>
-    <input id="rvName" type="text" maxlength="20" placeholder="이름 (닉네임 가능)">
+    <h2>⭐ <span data-i18n="rvTitle">후기 남기기</span> <span class="avg" id="avg"></span></h2>
+    <input id="rvName" type="text" maxlength="20" placeholder="이름 (닉네임 가능)" data-i18n-ph="rvNamePh">
     <div class="stars" id="stars"></div>
-    <textarea id="rvText" maxlength="200" placeholder="맛은 어땠나요? (200자 이내)"></textarea>
-    <button class="btn sm" id="rvBtn">후기 등록</button>
+    <textarea id="rvText" maxlength="200" placeholder="맛은 어땠나요? (200자 이내)" data-i18n-ph="rvTextPh"></textarea>
+    <button class="btn sm" id="rvBtn" data-i18n="rvBtn">후기 등록</button>
     <div id="reviews" style="margin-top:10px"><div class="empty">불러오는 중…</div></div>
   </div>
 
   <div class="card club">
-    <div class="club-tag">이 부스는 누가 운영하나요?</div>
-    <h2 style="margin:4px 0 6px">🚀 전남대 광주캠퍼스 창업동아리 미르</h2>
-    <p class="club-q">"창업이 처음이어도 좋습니다.<br>같이 뛸 사람을 찾고 있어요."</p>
-    <div class="club-acts">
+    <div class="club-tag" data-i18n="clubTag">이 부스는 누가 운영하나요?</div>
+    <h2 style="margin:4px 0 6px" data-i18n="clubName">🚀 전남대 광주캠퍼스 창업동아리 미르</h2>
+    <p class="club-q" data-i18n="clubQ">"창업이 처음이어도 좋습니다.<br>같이 뛸 사람을 찾고 있어요."</p>
+    <div class="club-acts" data-i18n="clubActs">
       <span>🏆 대학 벤처동아리 경진대회</span><span>💡 아이템 고도화 해커톤</span>
       <span>🤝 10개 대학 연합 창업동아리</span><span>🎓 멘토링 · 현장 검증</span>
       <span>🎪 용봉대동제 부스</span><span>🏕 MT · 교내 행사</span>
     </div>
-    <a class="btn club-btn" href="https://jnumir.netlify.app/" target="_blank" rel="noopener">동아리 구경하고 지원하기 →</a>
+    <a class="btn club-btn" data-i18n="clubBtn" href="https://jnumir.netlify.app/" target="_blank" rel="noopener">동아리 구경하고 지원하기 →</a>
   </div>
 </div>
 
-<div style="max-width:520px;margin:6px auto 24px;padding:0 16px"><a href="/admin.html" style="display:block;text-align:center;background:#2b1d12;color:#fff;font-size:17px;font-weight:800;padding:16px;border-radius:14px;text-decoration:none">🔒 관리자 모드 (운영진 전용)</a></div>
+<div style="max-width:520px;margin:6px auto 24px;padding:0 16px"><a href="/admin.html" style="display:block;text-align:center;background:#2b1d12;color:#fff;font-size:17px;font-weight:800;padding:16px;border-radius:14px;text-decoration:none" data-i18n="adminLink">🔒 관리자 모드 (운영진 전용)</a></div>
 
 <div class="bar"><div class="in">
   <div class="sum"><small id="count">메뉴를 선택해주세요</small><b id="total">0원</b></div>
-  <button class="btn" id="orderBtn" disabled>주문하기</button>
+  <button class="btn" id="orderBtn" disabled data-i18n="orderBtn">주문하기</button>
 </div></div>
 
 <div class="modal" id="modal"><div class="sheet">
-  <div class="okline">✅ 주문 접수 완료</div>
+  <div class="okline" data-i18n="okline">✅ 주문 접수 완료</div>
   <div class="big" id="mNo">#0</div>
   <div id="mSummary" style="color:var(--muted);font-size:14px"></div>
   <div id="mWait" class="waitline"></div>
+  <div id="pushLine" class="pushline"></div>
   <div id="payTransfer">
     <div class="acct">
-      <div class="lbl">아래 계좌로 보내주세요</div>
+      <div class="lbl" data-i18n="sendTo">아래 계좌로 보내주세요</div>
       <div class="amt" id="mTotal"></div>
       <div id="mBank" style="margin-top:6px"></div>
       <div class="acctno" id="mAcct"></div>
-      <div class="hint">입금자명은 <b>주문자 이름</b>으로!</div>
+      <div class="hint" data-i18n="senderHint">입금자명은 <b>주문자 이름</b>으로!</div>
     </div>
     <div class="payapps">
-      <a id="tossLink" class="payapp toss-b">토스로<br>송금</a>
-      <a id="kakaoLink" class="payapp kakao-b">카카오페이로<br>송금</a>
+      <a id="tossLink" class="payapp toss-b" data-i18n="toss">토스로<br>송금</a>
+      <a id="kakaoLink" class="payapp kakao-b" data-i18n="kakao">카카오페이로<br>송금</a>
     </div>
     <div class="payhint" id="payhint"></div>
-    <button class="btn ghost" id="copyBtn">📋 계좌번호 복사 (다른 은행 앱)</button>
-    <button class="btn sent" id="sentBtn">✅ 송금했어요</button>
+    <button class="btn ghost" id="copyBtn" data-i18n="copyAcct">📋 계좌번호 복사 (다른 은행 앱)</button>
+    <button class="btn sent" id="sentBtn" data-i18n="sent">✅ 송금했어요</button>
   </div>
   <div id="payOnsite" style="display:none">
     <div class="acct">
       <div class="amt" id="mTotal2"></div>
-      <div style="margin-top:6px;line-height:1.6">부스에서 주문번호 <b id="mNo2"></b>을 말하고<br>현금·카드로 결제해주세요</div>
+      <div style="margin-top:6px;line-height:1.6" data-i18n="onsiteMsg">부스에서 주문번호 <b id="mNo2"></b>을 말하고<br>현금·카드로 결제해주세요</div>
     </div>
   </div>
   <button class="btn ghost" id="closeBtn">닫기</button>
@@ -203,8 +215,8 @@
   <div id="readyMascot" style="width:150px;margin:0 auto"></div>
   <div class="ready-no" id="readyNo">#0</div>
   <div class="ready-t" id="readyT">음식이 나왔어요!</div>
-  <div style="color:var(--muted);margin:6px 0 18px">부스(후문 7거리 5번)로 와주세요</div>
-  <button class="btn" id="readyOk" style="width:100%">확인했어요</button>
+  <div style="color:var(--muted);margin:6px 0 18px" data-i18n="comeBooth">부스(후문 7거리 5번)로 와주세요</div>
+  <button class="btn" id="readyOk" style="width:100%" data-i18n="gotIt">확인했어요</button>
 </div></div>
 
 <script type="module">
@@ -212,6 +224,31 @@ import * as CFG from './config.js';
 import { mascotSVG, MASCOT_CSS } from './mascot.js';
 const { BANK, TOSS_BANK, ACCOUNT, HOLDER, MENU } = CFG;
 const TOSS_ID = CFG.TOSS_ID || '';
+// ---- 언어 (한국어 / English)
+let lang = 'ko';
+try { lang = localStorage.getItem('lang') || ((navigator.language||'ko').toLowerCase().startsWith('ko') ? 'ko' : 'en'); } catch {}
+const L = (ko, en) => lang === 'en' ? en : ko;
+const bankName = () => lang === 'en' && /국민/.test(BANK) ? 'KB Kookmin Bank' : BANK;
+const mName = m => lang === 'en' ? (m.en || m.name) : m.name;
+const EN = {
+  title:'🍜 Festival Snack Order', steps:'Name → Menu → Payment → Order',
+  runby:'🚀 Run by · <b>CNU Gwangju Startup Club MIR</b> ›', nameLbl:'Your name', namePh:'e.g. Alex',
+  payLbl:'Payment', payTransfer:'💳 Bank transfer<small>Send right after ordering</small>', payOnsite:'💵 Pay at booth<small>Cash or card at the booth</small>',
+  acctLbl:'Account', copy:'Copy', rvTitle:'Leave a review', rvNamePh:'Name (nickname OK)', rvTextPh:'How was it? (max 200 chars)', rvBtn:'Post review',
+  clubTag:'Who runs this booth?', clubName:'🚀 CNU Gwangju Campus Startup Club MIR',
+  clubQ:'"New to startups? No problem.<br>We are looking for teammates to run with."',
+  clubActs:'<span>🏆 University venture club contests</span><span>💡 Idea hackathons</span><span>🤝 10-university startup alliance</span><span>🎓 Mentoring · field validation</span><span>🎪 Yongbong festival booth</span><span>🏕 Retreats · campus events</span>',
+  clubBtn:'Visit the club & apply →', orderBtn:'Order', adminLink:'🔒 Admin mode (staff only)', okline:'✅ Order received',
+  sendTo:'Please send to this account', senderHint:'Use your <b>order name</b> as the sender name!',
+  toss:'Send with<br>Toss', kakao:'Send with<br>KakaoPay', copyAcct:'📋 Copy account no. (other bank apps)', sent:"✅ I've sent it",
+  onsiteMsg:'Tell us order number <b id="mNo2"></b> at the booth<br>and pay by cash or card', comeBooth:'Please come to the booth (Back gate 7-way, #5)', gotIt:'Got it',
+};
+function applyStatic(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { if (el.dataset.ko == null) el.dataset.ko = el.innerHTML; const k = el.dataset.i18n; el.innerHTML = lang === 'en' && EN[k] ? EN[k] : el.dataset.ko; });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { if (el.dataset.koPh == null) el.dataset.koPh = el.placeholder; const k = el.dataset.i18nPh; el.placeholder = lang === 'en' && EN[k] ? EN[k] : el.dataset.koPh; });
+  const lb = document.getElementById('langBtn'); if (lb) lb.textContent = lang === 'en' ? '한국어' : 'EN';
+}
 const KAKAOPAY_LINK = CFG.KAKAOPAY_LINK || '';
 const NTFY_TOPIC = CFG.NTFY_TOPIC || '';
 const READY_MINUTES = CFG.READY_MINUTES || 5;
@@ -225,11 +262,11 @@ const priceOf = m => inSale() && SALE.prices[m.key] != null ? SALE.prices[m.key]
 const waitOf = o => Math.max(1, ...MENU.filter(m => (o.qty?.[m.key]||0) > 0).map(m => m.wait || READY_MINUTES));
 const etaOf = o => o.createdAt.getTime() + waitOf(o) * 60000;
 function salePrices(){ return Object.fromEntries(MENU.map(m => [m.key, priceOf(m)])); }
-import { configured, createOrder, watchOrders, watchOrder, onAdmin, itemsOf, addReview, watchReviews, markSent } from './db.js';
+import { configured, createOrder, watchOrders, watchOrder, onAdmin, itemsOf, addReview, watchReviews, markSent, savePush } from './db.js';
 
 const qty = Object.fromEntries(MENU.map(m => [m.key, 0]));
 const $ = id => document.getElementById(id);
-const won = n => n.toLocaleString('ko-KR') + '원';
+const won = n => lang === 'en' ? '₩' + n.toLocaleString('en-US') : n.toLocaleString('ko-KR') + '원';
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtAcct = a => a.length === 14 ? `${a.slice(0,6)}-${a.slice(6,8)}-${a.slice(8)}` : a;
 const kst = d => d.toLocaleString('ko-KR', { timeZone:'Asia/Seoul', month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
@@ -237,10 +274,10 @@ const kst = d => d.toLocaleString('ko-KR', { timeZone:'Asia/Seoul', month:'numer
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1800); }
 
 function renderMenu(){
-  $('menu').innerHTML = '<label class="t">메뉴 선택</label>' + MENU.map(m => `
+  $('menu').innerHTML = '<label class="t">' + L('메뉴 선택','Menu') + '</label>' + MENU.map(m => `
     <div class="item">
       <div class="emoji">${m.emoji}</div>
-      <div class="info"><b>${m.name}</b><div>${priceOf(m)!==m.price?`<s style="color:var(--muted)">${won(m.price)}</s> <b style="color:#e8261b">${won(priceOf(m))}</b>`:won(m.price)}${m.wait?` · <span style="color:var(--muted)">⏱ 약 ${m.wait}분</span>`:''}${m.note && priceOf(m)===m.price?` · <span style="color:var(--accent);font-weight:700">${m.note}</span>`:''}</div></div>
+      <div class="info"><b>${mName(m)}</b><div>${priceOf(m)!==m.price?`<s style="color:var(--muted)">${won(m.price)}</s> <b style="color:#e8261b">${won(priceOf(m))}</b>`:won(m.price)}${m.wait?` · <span style="color:var(--muted)">${L('⏱ 약 '+m.wait+'분','⏱ ~'+m.wait+' min')}</span>`:''}${m.note && priceOf(m)===m.price?` · <span style="color:var(--accent);font-weight:700">${L(m.note, m.noteEn||m.note)}</span>`:''}</div></div>
       <div class="qty">
         <button data-k="${m.key}" data-d="-1" aria-label="${m.name} 빼기">−</button>
         <span id="q-${m.key}">${qty[m.key]}</span>
@@ -262,7 +299,7 @@ function totals(){
 function updateBar(){
   const { total, count } = totals();
   $('total').textContent = won(total);
-  $('count').textContent = count ? `총 ${count}개` : '메뉴를 선택해주세요';
+  $('count').textContent = count ? L(`총 ${count}개`, `${count} item${count>1?'s':''}`) : L('메뉴를 선택해주세요','Pick your menu');
   $('orderBtn').disabled = !count;
 }
 
@@ -284,7 +321,7 @@ function foodReady(o, real = true){
   if (alerted.has(key) || alerted.has(o.id)) return;
   markAlerted(key);
   $('readyNo').textContent = '#' + o.no;
-  $('readyT').textContent = real ? `${o.no}번 주문 나왔습니다!` : `${o.no}번 주문 곧 나와요!`;
+  $('readyT').textContent = real ? L(`${o.no}번 주문 나왔습니다!`, `Order #${o.no} is ready!`) : L(`${o.no}번 주문 곧 나와요!`, `Order #${o.no} is almost ready!`);
   $('ready').classList.add('on');
   document.title = `🔔 #${o.no} 음식 나왔어요!`;
   sysNotify(o);
@@ -299,11 +336,12 @@ setInterval(() => {
   // 내 주문 남은 시간 표시
   document.querySelectorAll('[data-eta]').forEach(el => {
     const left = Math.ceil((Number(el.dataset.eta) - now) / 60000);
-    el.textContent = left > 0 ? `⏳ 약 ${left}분 후 완성 예정` : '🔔 곧 나와요! 부스로 와주세요';
+    el.textContent = etaText(Number(el.dataset.eta) - now);
   });
 }, 5000);
 $('readyOk').onclick = () => { $('ready').classList.remove('on'); clearInterval(alarmTimer); document.title = '축제 분식 주문'; };
 
+const etaText = ms => ms > 0 ? L(`⏳ 약 ${Math.ceil(ms/60000)}분 후 완성 예정`, `⏳ Ready in ~${Math.ceil(ms/60000)} min`) : L('🔔 곧 나와요! 부스로 와주세요', '🔔 Almost ready! Come to the booth');
 // 주문 현황은 익명: 김철수 → 김*수 (내 주문만 실명)
 const mask = n => { n = String(n); return n.length <= 1 ? n : n.length === 2 ? n[0] + '*' : n[0] + '*'.repeat(n.length - 2) + n[n.length - 1]; };
 function renderBoard(orders){
@@ -316,46 +354,66 @@ function renderBoard(orders){
   }
   $('board').innerHTML = orders.length ? orders.map(o => `
     <div class="order ${myIds.has(o.id)?'mine':''}">
-      <div class="top"><div><span class="no">#${o.no}</span> <span class="nm">${esc(myIds.has(o.id) || isAdminView ? o.name : mask(o.name))}</span>${myIds.has(o.id)?'<span class="minetag">내 주문</span>':''}${o.pay?`<span class="paytag">${o.pay==='현장결제'?'💵 현장':'💳 이체'}</span>`:''}</div>
-      <span class="chip s-${esc(o.status)}">${({'조리중':'👨‍🍳 조리 중','조리완료':'🍜 나왔어요!','수령완료':'✅ 완료','입금확인':'💰 결제완료','송금완료':'송금 확인중'})[o.status]||esc(o.status)}</span></div>
-      <div class="menu">${itemsOf(o).map(i=>`${esc(i.name)} ${i.qty}개`).join(' · ')} — <b>${won(o.total)}</b></div>
-      <div class="meta">🕒 ${kst(o.createdAt)} 주문</div>
-      ${myIds.has(o.id) && !(o.status==='조리완료'||o.status==='수령완료') ? `<div class="meta" style="color:var(--accent);font-weight:700" data-eta="${etaOf(o)}">⏳ 약 ${Math.max(1,Math.ceil((etaOf(o)-Date.now())/60000))}분 후 완성 예정</div>` : ''}
-      ${o.status==='입금대기' && o.pay!=='현장결제' && myIds.has(o.id)?`<button class="paybtn" data-pay="${o.id}">💸 ${won(o.total)} 송금하기</button>`:''}
-    </div>`).join('') : '<div class="empty">아직 주문 내역이 없어요. 위에서 주문해보세요!</div>';
-  $('updated').textContent = '실시간 반영 중';
+      <div class="top"><div><span class="no">#${o.no}</span> <span class="nm">${esc(myIds.has(o.id) || isAdminView ? o.name : mask(o.name))}</span>${myIds.has(o.id)?'<span class="minetag">'+L('내 주문','Mine')+'</span>':''}${o.pay?`<span class="paytag">${o.pay==='현장결제'?L('💵 현장','💵 Booth'):L('💳 이체','💳 Transfer')}</span>`:''}</div>
+      <span class="chip s-${esc(o.status)}">${(lang==='en' ? {'입금대기':'Awaiting payment','송금완료':'Checking transfer','입금확인':'💰 Paid','조리중':'👨‍🍳 Cooking','조리완료':'🍜 Ready!','수령완료':'✅ Done'} : {'조리중':'👨‍🍳 조리 중','조리완료':'🍜 나왔어요!','수령완료':'✅ 완료','입금확인':'💰 결제완료','송금완료':'송금 확인중'})[o.status]||esc(o.status)}</span></div>
+      <div class="menu">${itemsOf(o).map(i=>`${esc(mName(i))} ${L(i.qty+'개','×'+i.qty)}`).join(' · ')} — <b>${won(o.total)}</b></div>
+      <div class="meta">🕒 ${kst(o.createdAt)} ${L('주문','ordered')}</div>
+      ${myIds.has(o.id) && !(o.status==='조리완료'||o.status==='수령완료') ? `<div class="meta" style="color:var(--accent);font-weight:700" data-eta="${etaOf(o)}">${etaText(etaOf(o)-Date.now())}</div>` : ''}
+      ${o.status==='입금대기' && o.pay!=='현장결제' && myIds.has(o.id)?`<button class="paybtn" data-pay="${o.id}">💸 ${L(won(o.total)+' 송금하기', 'Pay '+won(o.total))}</button>`:''}
+    </div>`).join('') : '<div class="empty">'+L('아직 주문 내역이 없어요. 위에서 주문해보세요!','No orders yet. Order above!')+'</div>';
+  $('updated').textContent = L('실시간 반영 중','Live');
 }
 
 let payMethod = '계좌이체';
 $('paysel').onclick = e => { const b=e.target.closest('[data-paym]'); if(!b) return; payMethod=b.dataset.paym; document.querySelectorAll('#paysel button').forEach(x=>x.classList.toggle('on',x===b)); $('acctbox').style.display = payMethod==='계좌이체' ? 'flex' : 'none'; };
-$('acctLine').textContent = `${BANK} ${fmtAcct(ACCOUNT)}${HOLDER ? ' (' + HOLDER + ')' : ''}`;
-$('acctCopy').onclick = async () => { try{ await navigator.clipboard.writeText(ACCOUNT); }catch{ const ta=document.createElement('textarea'); ta.value=ACCOUNT; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } toast('계좌번호 복사 완료!'); };
+$('acctLine').textContent = `${bankName()} ${fmtAcct(ACCOUNT)}${HOLDER ? ' (' + HOLDER + ')' : ''}`;
+$('acctCopy').onclick = async () => { try{ await navigator.clipboard.writeText(ACCOUNT); }catch{ const ta=document.createElement('textarea'); ta.value=ACCOUNT; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } toast(L('계좌번호 복사 완료!','Account number copied!')); };
 
 // 폰 알림(화면 밖 알림) — 안드로이드 크롬 등에서 동작
 let swReg = null;
 try { if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').then(r => swReg = r).catch(()=>{}); } catch {}
-function askNotify(){ try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch {} }
+let permP = null;
+function askNotify(){ try { if ('Notification' in window) permP = Notification.permission === 'default' ? Notification.requestPermission() : Promise.resolve(Notification.permission); } catch {} }
+// ---- 앱 밖 푸시 (테이블링처럼): 주문하면 이 폰을 푸시 대상으로 등록
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+const isStandalone = (navigator.standalone === true) || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+async function subscribePush(orderId){
+  const line = $('pushLine');
+  try {
+    if (!CFG.VAPID_PUBLIC_KEY || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      line.innerHTML = isIOS && !isStandalone ? L('📲 아이폰은 <b>공유 → 홈 화면에 추가</b> 후 그 아이콘으로 주문하면 음식 나올 때 알림이 와요','📲 iPhone: <b>Share → Add to Home Screen</b>, then order from that icon to get alerts') : L('🔔 이 화면을 켜두면 음식 나올 때 알려드려요','🔔 Keep this page open and we will alert you');
+      return;
+    }
+    const perm = permP ? await permP : Notification.permission;
+    if (perm !== 'granted') { line.innerHTML = L('🔕 알림을 허용하지 않아서 폰 알림은 안 가요. 화면을 켜두세요!','🔕 Notifications are blocked. Please keep this page open!'); return; }
+    const reg = await navigator.serviceWorker.ready;
+    const key = Uint8Array.from(atob(CFG.VAPID_PUBLIC_KEY.replace(/-/g,'+').replace(/_/g,'/') + '='.repeat((4 - CFG.VAPID_PUBLIC_KEY.length % 4) % 4)), c => c.charCodeAt(0));
+    const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+    await savePush(orderId, sub.toJSON());
+    line.innerHTML = L('📲 음식 나오면 <b>폰으로 알림</b> 보내드려요! 다른 앱 써도 OK','📲 We will send a <b>phone notification</b> when it is ready!');
+  } catch (e) { console.error(e); line.innerHTML = L('🔔 이 화면을 켜두면 음식 나올 때 알려드려요','🔔 Keep this page open and we will alert you'); }
+}
 function sysNotify(o){
   try {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    const opt = { body: `부스(후문 7거리 5번)로 와주세요`, tag: 'ready-' + o.id, requireInteraction: true, vibrate: [400,150,400,150,400] };
-    if (swReg) swReg.showNotification(`🍜 ${o.no}번 주문 나왔습니다!`, opt); else new Notification(`🍜 ${o.no}번 주문 나왔습니다!`, opt);
+    const opt = { body: L('부스(후문 7거리 5번)로 와주세요','Please come to the booth (Back gate 7-way, #5)'), tag: 'ready-' + o.id, requireInteraction: true, vibrate: [400,150,400,150,400] };
+    if (swReg) swReg.showNotification(L(`🍜 ${o.no}번 주문 나왔습니다!`,`🍜 Order #${o.no} is ready!`), opt); else new Notification(L(`🍜 ${o.no}번 주문 나왔습니다!`,`🍜 Order #${o.no} is ready!`), opt);
   } catch {}
 }
 
 $('orderBtn').onclick = async () => {
   const name = $('name').value.trim();
-  if(!name){ toast('이름을 입력해주세요'); $('name').focus(); return; }
+  if(!name){ toast(L('이름을 입력해주세요','Please enter your name')); $('name').focus(); return; }
   askNotify();
-  $('orderBtn').disabled = true; $('orderBtn').textContent = '접수 중…';
+  $('orderBtn').disabled = true; $('orderBtn').textContent = L('접수 중…','Sending…');
   try{
     const o = await createOrder(name, qty, payMethod, salePrices());
-    rememberMine(o.id); prevStatus[o.id] = '입금대기'; watchMine(o.id); renderBoard(boardOrders);
+    rememberMine(o.id); prevStatus[o.id] = '입금대기'; watchMine(o.id); renderBoard(boardOrders); $('pushLine').textContent = ''; subscribePush(o.id);
     showPay(o);
     notify(o);
     MENU.forEach(m => { qty[m.key]=0; $('q-'+m.key).textContent='0'; });
-  }catch(e){ console.error(e); toast('주문 실패: 잠시 후 다시 시도해주세요'); }
-  finally{ $('orderBtn').textContent='주문하기'; updateBar(); }
+  }catch(e){ console.error(e); toast(L('주문 실패: 잠시 후 다시 시도해주세요','Order failed. Please try again')); }
+  finally{ $('orderBtn').textContent=L('주문하기','Order'); updateBar(); }
 };
 
 function notify(o){
@@ -371,33 +429,33 @@ function showPay(o){
   lastOrder = o;
   const onsite = o.pay === '현장결제';
   $('mNo').textContent = '#' + o.no;
-  $('mSummary').textContent = `${o.name} · ` + itemsOf(o).map(i=>`${i.name} ${i.qty}`).join(', ');
-  $('mWait').textContent = `⏱ 약 ${waitOf(o)}분 기다려주세요 (${MENU.filter(m=>m.key!=='set'&&m.wait).map(m=>m.name+' '+m.wait+'분').join(' · ')})`;
+  $('mSummary').textContent = `${o.name} · ` + itemsOf(o).map(i=>`${mName(i)} ${i.qty}`).join(', ');
+  $('mWait').textContent = L(`⏱ 약 ${waitOf(o)}분 기다려주세요 (${MENU.filter(m=>m.key!=='set'&&m.wait).map(m=>m.name+' '+m.wait+'분').join(' · ')})`, `⏱ About ${waitOf(o)} min (${MENU.filter(m=>m.key!=='set'&&m.wait).map(m=>mName(m)+' '+m.wait+' min').join(' · ')})`);
   $('payTransfer').style.display = onsite ? 'none' : 'block';
   $('payOnsite').style.display = onsite ? 'block' : 'none';
   $('mTotal').textContent = $('mTotal2').textContent = won(o.total);
   $('mNo2').textContent = '#' + o.no;
-  $('mBank').textContent = BANK + (HOLDER ? ` (예금주 ${HOLDER})` : '');
+  $('mBank').textContent = bankName() + (HOLDER ? L(` (예금주 ${HOLDER})`, ` (${HOLDER})`) : '');
   $('mAcct').textContent = fmtAcct(ACCOUNT);
   $('tossLink').href = TOSS_ID ? `https://toss.me/${encodeURIComponent(TOSS_ID)}/${o.total}` : `supertoss://send?amount=${o.total}&bank=${encodeURIComponent(TOSS_BANK)}&accountNo=${ACCOUNT}`;
   $('kakaoLink').style.display = KAKAOPAY_LINK ? 'block' : 'none';
-  $('payhint').textContent = KAKAOPAY_LINK ? '카카오페이는 금액이 자동 복사돼요 → 앱에서 붙여넣기' : '';
-  $('closeBtn').textContent = onsite ? '확인' : '나중에 보낼게요';
+  $('payhint').textContent = KAKAOPAY_LINK ? L('카카오페이는 금액이 자동 복사돼요 → 앱에서 붙여넣기','KakaoPay: the amount is copied — just paste it in the app') : '';
+  $('closeBtn').textContent = onsite ? L('확인','OK') : L('나중에 보낼게요','Pay later');
   $('modal').classList.add('on');
 }
 $('copyBtn').onclick = async () => {
   const text = ACCOUNT;
   try{ await navigator.clipboard.writeText(text); }
   catch{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
-  toast('계좌번호 복사 완료! 은행 앱에 붙여넣기 하세요');
+  toast(L('계좌번호 복사 완료! 은행 앱에 붙여넣기 하세요','Account number copied! Paste it in your bank app'));
 };
 async function copyText(t){ try{ await navigator.clipboard.writeText(t); }catch{ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } }
-$('kakaoLink').onclick = e => { e.preventDefault(); if(!lastOrder) return; copyText(String(lastOrder.total)); toast(`${won(lastOrder.total)} 복사! 카카오페이에서 금액에 붙여넣기`); setTimeout(() => location.href = KAKAOPAY_LINK, 600); };
+$('kakaoLink').onclick = e => { e.preventDefault(); if(!lastOrder) return; copyText(String(lastOrder.total)); toast(L(`${won(lastOrder.total)} 복사! 카카오페이에서 금액에 붙여넣기`, `${won(lastOrder.total)} copied! Paste it in KakaoPay`)); setTimeout(() => location.href = KAKAOPAY_LINK, 600); };
 $('sentBtn').onclick = async () => {
   if (!lastOrder) return;
   $('sentBtn').disabled = true;
-  try { await markSent(lastOrder.id); $('modal').classList.remove('on'); toast('송금 확인 요청했어요! 곧 확인해드릴게요 🙏'); }
-  catch(e){ console.error(e); toast('잠시 후 다시 눌러주세요'); }
+  try { await markSent(lastOrder.id); $('modal').classList.remove('on'); toast(L('송금 확인 요청했어요! 곧 확인해드릴게요 🙏','Thanks! We will confirm your transfer soon 🙏')); }
+  catch(e){ console.error(e); toast(L('잠시 후 다시 눌러주세요','Please try again in a moment')); }
   finally { $('sentBtn').disabled = false; }
 };
 $('closeBtn').onclick = () => $('modal').classList.remove('on');
@@ -411,15 +469,17 @@ function drawStars(){ $('stars').innerHTML=[1,2,3,4,5].map(n=>`<button data-s="$
 $('stars').onclick = e => { const b=e.target.closest('[data-s]'); if(!b) return; stars=Number(b.dataset.s); drawStars(); };
 $('rvBtn').onclick = async () => {
   const name=$('rvName').value.trim()||$('name').value.trim(), text=$('rvText').value.trim();
-  if(!name){ toast('이름을 입력해주세요'); $('rvName').focus(); return; }
+  if(!name){ toast(L('이름을 입력해주세요','Please enter your name')); $('rvName').focus(); return; }
   $('rvBtn').disabled=true;
-  try{ await addReview(name.slice(0,20), stars, text.slice(0,200)); $('rvText').value=''; toast('후기 고마워요! 🙏'); }
-  catch(e){ console.error(e); toast('등록 실패: 다시 시도해주세요'); }
+  try{ await addReview(name.slice(0,20), stars, text.slice(0,200)); $('rvText').value=''; toast(L('후기 고마워요! 🙏','Thanks for the review! 🙏')); }
+  catch(e){ console.error(e); toast(L('등록 실패: 다시 시도해주세요','Failed to post. Please try again')); }
   finally{ $('rvBtn').disabled=false; }
 };
+let lastReviews = [];
 function renderReviews(list){
-  $('avg').textContent = list.length ? `★ ${(list.reduce((a,r)=>a+r.stars,0)/list.length).toFixed(1)} · ${list.length}개` : '';
-  $('reviews').innerHTML = list.length ? list.map(r=>`<div class="rv"><div><b>${esc(r.name)}</b> <span class="s">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span> <span class="meta" style="font-size:12px;color:var(--muted)">${kst(r.createdAt)}</span></div>${r.text?`<p>${esc(r.text)}</p>`:''}</div>`).join('') : '<div class="empty">첫 후기를 남겨주세요!</div>';
+  lastReviews = list;
+  $('avg').textContent = list.length ? `★ ${(list.reduce((a,r)=>a+r.stars,0)/list.length).toFixed(1)} · ${list.length}${L('개','')}` : '';
+  $('reviews').innerHTML = list.length ? list.map(r=>`<div class="rv"><div><b>${esc(r.name)}</b> <span class="s">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span> <span class="meta" style="font-size:12px;color:var(--muted)">${kst(r.createdAt)}</span></div>${r.text?`<p>${esc(r.text)}</p>`:''}</div>`).join('') : '<div class="empty">'+L('첫 후기를 남겨주세요!','Be the first to review!')+'</div>';
 }
 drawStars();
 
@@ -428,21 +488,26 @@ let lastSale = null;
 function saleTick(){
   if(!SALE) return;
   const on = inSale(), x = kstMinutes(), s0 = hm(SALE.start), s1 = hm(SALE.end);
-  const items = MENU.filter(m => SALE.prices[m.key] != null).map(m => `${m.name.split(' ')[0]} ${won(SALE.prices[m.key])}`).join(' · ');
+  const items = MENU.filter(m => SALE.prices[m.key] != null).map(m => `${mName(m).split(' ')[0]} ${won(SALE.prices[m.key])}`).join(' · ');
   const bar = $('salebar');
-  if (on) { bar.className='salebar on'; bar.innerHTML = `⏰ <b>타임세일 진행 중!</b> ${items}<br><small>${SALE.end}까지 · 약 ${Math.max(1,Math.ceil(s1-x))}분 남음</small>`; bar.style.display='block'; }
-  else if (x < s0 && s0 - x <= 180) { bar.className='salebar'; bar.innerHTML = `🔔 오늘 밤 <b>${SALE.start}~${SALE.end}</b> 타임세일! ${items}`; bar.style.display='block'; }
+  if (on) { bar.className='salebar on'; bar.innerHTML = L(`⏰ <b>타임세일 진행 중!</b> ${items}<br><small>${SALE.end}까지 · 약 ${Math.max(1,Math.ceil(s1-x))}분 남음</small>`, `⏰ <b>Time sale now!</b> ${items}<br><small>Until ${SALE.end} · ${Math.max(1,Math.ceil(s1-x))} min left</small>`); bar.style.display='block'; }
+  else if (x < s0 && s0 - x <= 180) { bar.className='salebar'; bar.innerHTML = L(`🔔 오늘 밤 <b>${SALE.start}~${SALE.end}</b> 타임세일! ${items}`, `🔔 Time sale tonight <b>${SALE.start}~${SALE.end}</b>! ${items}`); bar.style.display='block'; }
   else bar.style.display='none';
   if (on !== lastSale) { lastSale = on; renderMenu(); updateBar(); }
 }
 setInterval(saleTick, 15000);
 
 { const st=document.createElement('style'); st.textContent=MASCOT_CSS; document.head.appendChild(st); $('readyMascot').innerHTML = mascotSVG('r'); $('readyMascot').classList.add('mascot-jump'); }
+function setLang(l){ lang = l; try{ localStorage.setItem('lang', l); }catch{} applyStatic(); iosGuide(); $('acctLine').textContent = `${bankName()} ${fmtAcct(ACCOUNT)}${HOLDER ? ' (' + HOLDER + ')' : ''}`; renderMenu(); updateBar(); lastSale = null; saleTick(); renderBoard(boardOrders); renderReviews(lastReviews); setBoardTitle(); if (lastOrder && $('modal').classList.contains('on')) showPay(lastOrder); }
+$('langBtn').onclick = () => setLang(lang === 'en' ? 'ko' : 'en');
+function iosGuide(){ const b=$('iosbar'); if (isIOS && !isStandalone) { b.style.display='block'; b.innerHTML = L('📲 <b>아이폰이면 먼저!</b> 아래 <b>공유 버튼 → 홈 화면에 추가</b> → 생긴 아이콘으로 열어서 주문하면, 음식 나올 때 <b>폰 알림</b>이 와요','📲 <b>iPhone users:</b> tap <b>Share → Add to Home Screen</b>, open the new icon and order there to get a <b>phone alert</b>'); } }
+applyStatic(); iosGuide();
 renderMenu(); updateBar(); saleTick();
 if(!configured){ $('board').innerHTML = '<div class="empty">config.js에 Firebase 설정을 붙여넣어 주세요.</div>'; }
 else { watchReviews(renderReviews, e=>console.error(e)); }
 // 손님: 내 주문만 / 관리자 로그인 상태: 전체 주문
 let isAdminView = false, unsubAll = null;
+function setBoardTitle(){ $('boardTitle').firstChild.textContent = isAdminView ? L('📋 전체 주문 (관리자) ','📋 All orders (admin) ') : L('🧾 내 주문 ','🧾 My orders '); }
 const myMap = {}, myUnsubs = {};
 function emitMine(){ if (!isAdminView) renderBoard(Object.values(myMap).filter(Boolean).sort((a,b) => b.no - a.no)); }
 function watchMine(id){ if (myUnsubs[id]) return; myUnsubs[id] = watchOrder(id, (o) => { myMap[id] = o; emitMine(); }); }
@@ -451,7 +516,7 @@ if (configured) {
   [...myIds].forEach(watchMine); emitMine();
   onAdmin(ok => {
     isAdminView = ok;
-    $('boardTitle').firstChild.textContent = ok ? '📋 전체 주문 (관리자) ' : '🧾 내 주문 ';
+    setBoardTitle();
     if (ok && !unsubAll) unsubAll = watchOrders(renderBoard, e => console.error(e));
     if (!ok && unsubAll) { unsubAll(); unsubAll = null; emitMine(); }
   });

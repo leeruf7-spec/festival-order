@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, connectFirestoreEmulator, collection, doc, runTransaction, serverTimestamp, onSnapshot, query, orderBy, updateDoc, deleteDoc, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, connectFirestoreEmulator, collection, doc, runTransaction, serverTimestamp, onSnapshot, query, orderBy, updateDoc, deleteDoc, addDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getAuth, connectAuthEmulator, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { firebaseConfig, ADMIN_EMAIL, MENU } from './config.js';
 
@@ -54,3 +54,13 @@ export function watchReviews(cb, onErr) {
   }, onErr);
 }
 export const removeReview = id => deleteDoc(doc(db, 'reviews', id));
+
+// 손님 폰 푸시 구독 저장 (주문 1건당 1번)
+export const savePush = (orderId, sub) => setDoc(doc(db, 'push', orderId), { sub: JSON.stringify(sub), createdAt: serverTimestamp() });
+// 관리자: 손님 폰으로 '음식 나왔어요' 푸시 보내기 (Vercel /api/push 경유)
+export async function sendReadyPush(orderId) {
+  const u = auth.currentUser; if (!u) return;
+  const idToken = await u.getIdToken();
+  const r = await fetch('/api/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken, orderId }) });
+  return r.json().catch(() => ({}));
+}
