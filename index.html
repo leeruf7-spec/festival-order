@@ -114,6 +114,12 @@
   .langbtn{position:absolute;right:0;top:-8px;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-weight:900;font-size:13px;cursor:pointer;color:var(--ink)}
   .pushline{font-size:13px;margin:8px 0 0;line-height:1.5;color:var(--ink)}
   .iosbar{background:#fff;border:2px solid #3182f6;border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.5;margin:10px 0}
+  .gamebtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;border-radius:18px;padding:14px 16px;margin:14px 0;background:linear-gradient(135deg,#ff6b2c,#ffb22c);color:#fff;font-size:16px;cursor:pointer;box-shadow:0 6px 18px rgba(255,107,44,.3)}
+  .gamebtn span:nth-child(2){flex:1}.gamebtn small{opacity:.9;font-size:12px}
+  .gamewrap{position:fixed;inset:0;z-index:25;background:#fff8ef;display:none}
+  .gamewrap.on{display:block}
+  .gamewrap iframe{width:100%;height:100%;border:0}
+  .gameclose{position:absolute;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top));z-index:2;border:0;border-radius:99px;padding:6px 12px;background:rgba(43,29,18,.85);color:#fff;font-weight:800;font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -150,6 +156,8 @@
     <h2 id="boardTitle">🧾 내 주문 <small id="updated"></small></h2>
     <div id="board"><div class="empty">불러오는 중…</div></div>
   </div>
+
+  <button class="gamebtn" id="gameBtn"><span style="font-size:34px">🍜</span><span><b data-i18n="gameT">기다리는 동안 우동 게임!</b><br><small data-i18n="gameS">미르 우동 가게 — 60초 동안 우동 만들기</small></span><span style="font-size:22px">›</span></button>
 
   <div class="card">
     <h2>⭐ <span data-i18n="rvTitle">후기 남기기</span> <span class="avg" id="avg"></span></h2>
@@ -210,6 +218,7 @@
   </div>
   <button class="btn ghost" id="closeBtn">닫기</button>
 </div></div>
+<div class="gamewrap" id="gamewrap"><button class="gameclose" id="gameClose">✕ 닫기</button><iframe id="gameFrame" title="미르 우동 가게"></iframe></div>
 <div class="toast" id="toast"></div>
 <div class="ready" id="ready"><div class="ready-box">
   <div id="readyMascot" style="width:150px;margin:0 auto"></div>
@@ -241,7 +250,7 @@ const EN = {
   clubBtn:'Visit the club & apply →', orderBtn:'Order', adminLink:'🔒 Admin mode (staff only)', okline:'✅ Order received',
   sendTo:'Please send to this account', senderHint:'Use your <b>order name</b> as the sender name!',
   toss:'Send with<br>Toss', kakao:'Send with<br>KakaoPay', copyAcct:'📋 Copy account no. (other bank apps)', sent:"✅ I've sent it",
-  onsiteMsg:'Tell us order number <b id="mNo2"></b> at the booth<br>and pay by cash or card', comeBooth:'Please come to the booth (Back gate 7-way, #5)', gotIt:'Got it',
+  onsiteMsg:'Tell us order number <b id="mNo2"></b> at the booth<br>and pay by cash or card', comeBooth:'Please come to the booth (Back gate 7-way, #5)', gotIt:'Got it', gameT:'Play the udon game while you wait!', gameS:'MIR Udon Shop — make udon in 60 seconds',
 };
 function applyStatic(){
   document.documentElement.lang = lang;
@@ -499,6 +508,8 @@ setInterval(saleTick, 15000);
 
 { const st=document.createElement('style'); st.textContent=MASCOT_CSS; document.head.appendChild(st); $('readyMascot').innerHTML = mascotSVG('r'); $('readyMascot').classList.add('mascot-jump'); }
 function setLang(l){ lang = l; try{ localStorage.setItem('lang', l); }catch{} applyStatic(); iosGuide(); $('acctLine').textContent = `${bankName()} ${fmtAcct(ACCOUNT)}${HOLDER ? ' (' + HOLDER + ')' : ''}`; renderMenu(); updateBar(); lastSale = null; saleTick(); renderBoard(boardOrders); renderReviews(lastReviews); setBoardTitle(); if (lastOrder && $('modal').classList.contains('on')) showPay(lastOrder); }
+$('gameBtn').onclick = () => { if (!$('gameFrame').src) $('gameFrame').src = '/game.html'; $('gamewrap').classList.add('on'); };
+$('gameClose').onclick = () => $('gamewrap').classList.remove('on');
 $('langBtn').onclick = () => setLang(lang === 'en' ? 'ko' : 'en');
 function iosGuide(){ const b=$('iosbar'); if (isIOS && !isStandalone) { b.style.display='block'; b.innerHTML = L('📲 <b>아이폰이면 먼저!</b> 아래 <b>공유 버튼 → 홈 화면에 추가</b> → 생긴 아이콘으로 열어서 주문하면, 음식 나올 때 <b>폰 알림</b>이 와요','📲 <b>iPhone users:</b> tap <b>Share → Add to Home Screen</b>, open the new icon and order there to get a <b>phone alert</b>'); } }
 applyStatic(); iosGuide();

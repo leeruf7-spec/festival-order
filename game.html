@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>미르 우동 가게</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#6b4426;--cream:#fff6e6;--peach:#ffd9b0;--peach2:#ffc79a;--wood:#e9a96b;--wood2:#d48c4f;--red:#f0605a;--ok:#5cb85c}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{margin:0;height:100%;font-family:"Jua","Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:var(--ink);overflow:hidden;background:#ffe6c8}
+  .app{position:relative;max-width:460px;height:100%;margin:0 auto;overflow:hidden;
+    background:linear-gradient(#ffe9cf 0%,#ffdcb6 62%,#f4c08a 62.2%,#f4c08a 100%)}
+  /* 벽 선반 */
+  .wall{position:absolute;inset:0 0 38% 0;background:
+     repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 34px,transparent 34px 68px)}
+  .shelf{position:absolute;left:4%;right:4%;height:12px;background:var(--wood);border-radius:6px;box-shadow:0 5px 0 var(--wood2)}
+  .shelf .items{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:space-around;font-size:24px;filter:saturate(.75)}
+  .bunting{position:absolute;top:62px;left:0;right:0;height:22px;display:flex;justify-content:space-around}
+  .bunting i{width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:18px solid #ffb48a}
+  .bunting i:nth-child(3n){border-top-color:#ffe08a}.bunting i:nth-child(3n+1){border-top-color:#f7a1a1}
+  /* HUD */
+  .hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;z-index:5}
+  .pill{background:#fff9ee;border:3px solid #f2c48f;border-radius:99px;padding:4px 12px;font-size:17px;box-shadow:0 3px 0 #f2c48f}
+  .pill.low{color:var(--red);animation:blink .5s infinite alternate}@keyframes blink{to{opacity:.5}}
+  /* 손님 */
+  .stage{position:absolute;left:0;right:0;top:22%;height:42%}
+  .cust{position:absolute;left:50%;bottom:0;width:170px;transform:translateX(-50%);transition:transform .45s,opacity .45s}
+  .cust.enter{animation:enter .55s cubic-bezier(.3,1.4,.5,1)}
+  @keyframes enter{from{transform:translate(-50%,40px) scale(.7);opacity:0}}
+  .cust.leave{transform:translate(-50%,30px) scale(.8);opacity:0}
+  .cust.happy svg{animation:hop .35s 3}@keyframes hop{50%{transform:translateY(-14px)}}
+  .cust svg{width:100%;display:block;animation:breathe 2.4s ease-in-out infinite;transform-origin:50% 100%}
+  @keyframes breathe{50%{transform:scale(1.03,.97)}}
+  .bubble{position:absolute;left:50%;top:0;transform:translateX(-50%);background:#fff;border:4px solid #f2c48f;border-radius:28px;padding:10px 16px;display:flex;gap:10px;box-shadow:0 5px 0 #f2c48f;z-index:3}
+  .bubble::after{content:"";position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);border:12px solid transparent;border-top-color:#f2c48f}
+  .bubble .it{font-size:40px;line-height:1;position:relative;transition:.2s}
+  .bubble .it.todo{filter:grayscale(1) opacity(.4)}
+  .bubble .it.done{animation:got .4s}@keyframes got{50%{transform:scale(1.35)}}
+  .heart{position:absolute;left:10%;top:36%;width:54px;height:50px;z-index:3}
+  .heart .fill{transition:height .25s linear}
+  /* 카운터 (체크 식탁보) */
+  .counter{position:absolute;left:0;right:0;top:62%;height:9%;background:
+     linear-gradient(90deg,rgba(240,96,90,.35) 50%,transparent 50%) 0 0/26px 26px,
+     linear-gradient(rgba(240,96,90,.35) 50%,#fff8f0 50%) 0 0/26px 26px;border-top:4px solid #f2c48f;box-shadow:0 6px 0 rgba(0,0,0,.06)}
+  .tray{position:absolute;left:50%;top:-34px;transform:translateX(-50%);display:flex;gap:6px;min-height:40px}
+  .tray span{font-size:34px;animation:drop .3s}@keyframes drop{from{transform:translateY(-20px);opacity:0}}
+  /* 아래 카드 */
+  .cards{position:absolute;left:10px;right:10px;bottom:calc(14px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .card{position:relative;background:#fffaf0;border:4px solid #f2c48f;border-radius:20px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 6px 0 #e3a865;cursor:pointer;touch-action:manipulation;transition:transform .08s}
+  .card:active{transform:translateY(4px);box-shadow:0 2px 0 #e3a865}
+  .card .ic{font-size:54px;line-height:1;transition:.2s}
+  .card .nm{font-size:16px;margin-top:6px}
+  .card .st{font-size:12px;color:#b07a4b;margin-top:2px;height:14px}
+  .card.cooking .ic{animation:wob .5s infinite}@keyframes wob{50%{transform:rotate(-6deg) scale(.95)}}
+  .card.ready{border-color:#9bd48c;box-shadow:0 6px 0 #6fb35f;background:#f4fff0}
+  .card.ready .ic{animation:bounce .6s infinite}@keyframes bounce{50%{transform:translateY(-8px)}}
+  .card.burnt{border-color:#c9b6a6;box-shadow:0 6px 0 #a8968a;background:#f3ece6}
+  .card.burnt .ic{filter:grayscale(1) brightness(.6)}
+  .ring{position:absolute;top:8px;right:8px;width:30px;height:30px}
+  .pop{position:absolute;left:50%;top:40%;transform:translateX(-50%);font-size:28px;pointer-events:none;animation:popup 1s forwards;z-index:8;white-space:nowrap;text-shadow:0 2px 0 #fff,0 0 10px #fff}
+  @keyframes popup{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}20%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px)}}
+  .coinfly{position:absolute;font-size:26px;z-index:9;pointer-events:none;transition:all .6s cubic-bezier(.5,-0.4,.7,1)}
+  /* 시작/끝 화면 */
+  .screen{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(255,226,196,.82);backdrop-filter:blur(3px);padding:18px}
+  .paper{background:#fffaf0;border:5px solid #f2c48f;border-radius:28px;padding:22px 18px;text-align:center;width:100%;max-width:340px;box-shadow:0 8px 0 #e3a865}
+  .paper h1{margin:6px 0 2px;font-size:30px;font-weight:400}
+  .paper p{margin:6px 0 14px;line-height:1.6;font-size:16px;color:#9a6a42}
+  .how{background:#fff1dc;border-radius:16px;padding:10px 12px;text-align:left;line-height:1.9;font-size:15px;margin-bottom:14px}
+  .go{border:0;border-radius:18px;padding:14px;width:100%;font:inherit;font-size:22px;color:#fff;background:#ff8f5a;box-shadow:0 6px 0 #e06a35;cursor:pointer}
+  .go:active{transform:translateY(4px);box-shadow:0 2px 0 #e06a35}
+  .stars{font-size:44px;letter-spacing:4px}
+  .stars .off{filter:grayscale(1) opacity(.35)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="wall"></div>
+  <div class="bunting"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="shelf" style="top:24%"><div class="items"><span>🫙</span><span>🍯</span><span>🧂</span><span>🫙</span><span>🌶</span></div></div>
+  <div class="shelf" style="top:44%;left:6%;right:62%"><div class="items"><span>🍶</span><span>🥢</span></div></div>
+  <div class="shelf" style="top:44%;left:62%;right:6%"><div class="items"><span>🍥</span><span>🧅</span></div></div>
+
+  <div class="hud">
+    <span class="pill">🪙 <span id="coin">0</span></span>
+    <span class="pill">😋 <span id="served">0</span>/<span id="goal">8</span></span>
+    <span class="pill" id="timeP">⏱ <span id="time">90</span></span>
+  </div>
+
+  <div class="stage">
+    <svg class="heart" viewBox="0 0 54 50"><defs><clipPath id="hc"><path d="M27 48 C-10 22 6 -6 27 12 C48 -6 64 22 27 48Z"/></clipPath></defs>
+      <path d="M27 48 C-10 22 6 -6 27 12 C48 -6 64 22 27 48Z" fill="#fff" stroke="#f2c48f" stroke-width="4"/>
+      <g clip-path="url(#hc)"><rect class="fill" id="heartFill" x="0" y="0" width="54" height="50" fill="#f0605a"/></g>
+      <path d="M14 16 q4 -6 10 -2" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>
+    </svg>
+    <div class="cust" id="cust"><div class="bubble" id="bubble"></div><div id="custBody" style="margin-top:84px"></div></div>
+  </div>
+
+  <div class="counter"><div class="tray" id="tray"></div></div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="screen" id="start">
+    <div class="paper">
+      <div style="font-size:50px">🍜</div>
+      <h1>미르 우동 가게</h1>
+      <p>진짜 우동이 나오는 동안<br>손님 8명을 행복하게 해주세요!</p>
+      <div class="how">
+        👆 카드를 누르면 <b>요리 시작</b><br>
+        ✨ 통통 튀면 <b>완성!</b> 한 번 더 눌러서 <b>건네주기</b><br>
+        🔥 너무 오래 두면 <b>타요</b> → 눌러서 버리기<br>
+        ❤️ 하트가 다 닳기 전에 서빙!
+      </div>
+      <button class="go" id="startBtn">가게 오픈!</button>
+    </div>
+  </div>
+  <div class="screen" id="end" style="display:none">
+    <div class="paper">
+      <div class="stars" id="stars"></div>
+      <h1 id="endT">영업 종료!</h1>
+      <p id="endP"></p>
+      <button class="go" id="againBtn">한 번 더!</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const FOODS = [
+  { k:'udon',  e:'🍜', n:'우동',     cook:2600 },
+  { k:'mandu', e:'🥟', n:'뿌링만두', cook:3400 },
+  { k:'eomuk', e:'🍢', n:'어묵꼬치', cook:1500 },
+];
+const BURN = 4500;     // 완성 후 이 시간 지나면 탐
+const GOAL = 8, TIME = 90;
+
+// ---- 손님 캐릭터 (오리지널, 동글동글 동물)
+const PAL = [['#ffe27a','#f4b942'],['#ffd1dc','#f39ab0'],['#d6ecff','#9cc6ef'],['#e3f5c9','#a9d77f'],['#f3dcc0','#d4a77a'],['#e9dcff','#b9a2ef']];
+const EARS = ['cat','bunny','bear','chick','none'];
+function custSVG(seed){
+  const [c,d] = PAL[seed % PAL.length], ear = EARS[Math.floor(seed/3) % EARS.length];
+  const ears = {
+    cat:`<path d="M44 60 L52 22 L78 50Z M126 60 L118 22 L92 50Z" fill="${c}" stroke="${d}" stroke-width="4" stroke-linejoin="round"/>`,
+    bunny:`<ellipse cx="66" cy="30" rx="12" ry="32" fill="${c}" stroke="${d}" stroke-width="4"/><ellipse cx="104" cy="30" rx="12" ry="32" fill="${c}" stroke="${d}" stroke-width="4"/>`,
+    bear:`<circle cx="50" cy="56" r="17" fill="${c}" stroke="${d}" stroke-width="4"/><circle cx="120" cy="56" r="17" fill="${c}" stroke="${d}" stroke-width="4"/>`,
+    chick:`<path d="M85 38 q-8 -18 4 -22 q-2 10 6 14 q-4 -12 8 -10 q-10 8 -8 18z" fill="${d}"/>`,
+    none:'' }[ear];
+  return `<svg viewBox="0 0 170 170">${ears}
+    <ellipse cx="85" cy="166" rx="58" ry="6" fill="rgba(0,0,0,.08)"/>
+    <path d="M85 40 C140 40 158 92 154 128 C150 160 120 166 85 166 C50 166 20 160 16 128 C12 92 30 40 85 40Z" fill="${c}" stroke="${d}" stroke-width="4"/>
+    <ellipse cx="62" cy="104" rx="7" ry="9" fill="#5a3a22"/><ellipse cx="108" cy="104" rx="7" ry="9" fill="#5a3a22"/>
+    <circle cx="64" cy="101" r="2.5" fill="#fff"/><circle cx="110" cy="101" r="2.5" fill="#fff"/>
+    <ellipse cx="46" cy="122" rx="11" ry="7" fill="#ff9a9a" opacity=".6"/><ellipse cx="124" cy="122" rx="11" ry="7" fill="#ff9a9a" opacity=".6"/>
+    <path d="M78 118 q7 7 14 0" fill="none" stroke="#5a3a22" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M30 138 q-14 -6 -12 -20" stroke="${d}" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M140 138 q14 -6 12 -20" stroke="${d}" stroke-width="7" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ---- 소리
+let actx=null;
+function tone(f,d=.1,type='sine',v=.22,delay=0){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const t=actx.currentTime+delay, o=actx.createOscillator(), g=actx.createGain(); o.type=type; o.frequency.value=f; o.connect(g); g.connect(actx.destination); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+d); o.start(t); o.stop(t+d+.02);}catch{} }
+const sTap=()=>tone(520,.07,'triangle'), sReady=()=>{tone(880,.08,'triangle');tone(1175,.1,'triangle',.2,.08)}, sGive=()=>{tone(660,.08);tone(990,.1,'sine',.22,.07)},
+      sHappy=()=>[784,988,1175,1568].forEach((f,i)=>tone(f,.12,'triangle',.2,i*.08)), sBad=()=>tone(180,.25,'sawtooth',.15), sBurn=()=>tone(140,.3,'square',.1);
+function pop(t,c='#ff8f5a'){ const el=document.createElement('div'); el.className='pop'; el.style.color=c; el.textContent=t; $('app').appendChild(el); setTimeout(()=>el.remove(),1000); try{navigator.vibrate&&navigator.vibrate(25)}catch{} }
+
+// ---- 상태
+let coin=0, served=0, timeLeft=TIME, playing=false, tickId=null, heart=1, want=[], got=[], custN=0, combo=0;
+const st = {}; // 카드별 상태 {phase:'idle'|'cooking'|'ready'|'burnt', t0}
+
+function renderCards(){
+  $('cards').innerHTML = FOODS.map(f => `
+    <div class="card" id="c-${f.k}" data-k="${f.k}">
+      <svg class="ring" viewBox="0 0 36 36" style="display:none"><circle cx="18" cy="18" r="15" fill="#fff" stroke="#f2e2cc" stroke-width="5"/><circle class="rp" cx="18" cy="18" r="15" fill="none" stroke="#ff8f5a" stroke-width="5" stroke-dasharray="94.2" stroke-dashoffset="94.2" transform="rotate(-90 18 18)" stroke-linecap="round"/></svg>
+      <div class="ic">${f.e}</div><div class="nm">${f.n}</div><div class="st"></div>
+    </div>`).join('');
+  FOODS.forEach(f => st[f.k] = { phase:'idle', t0:0 });
+}
+$('cards').onclick = e => { const c=e.target.closest('.card'); if(!c||!playing) return; tapCard(c.dataset.k); };
+
+function tapCard(k){
+  const s = st[k], f = FOODS.find(x=>x.k===k);
+  if (s.phase==='idle'){ s.phase='cooking'; s.t0=performance.now(); sTap(); }
+  else if (s.phase==='ready'){
+    const need = want.filter((w,i)=>w===k && !got[i]).length;
+    if (need){ const i = want.findIndex((w,j)=>w===k && !got[j]); got[i]=true; s.phase='idle'; sGive(); flyToCust(f.e); drawBubble(); checkDone(); }
+    else { pop('지금은 필요 없대요 🙅','#c08a5a'); sBad(); }
+  }
+  else if (s.phase==='burnt'){ s.phase='idle'; pop('🗑 버렸어요','#a8968a'); tone(260,.1); }
+  paintCard(k);
+}
+function paintCard(k){
+  const s=st[k], el=$('c-'+k), f=FOODS.find(x=>x.k===k);
+  el.className = 'card ' + (s.phase==='idle'?'':s.phase);
+  el.querySelector('.st').textContent = {idle:'눌러서 요리',cooking:'요리 중…',ready:'완성! 건네주기',burnt:'탔어요! 버리기'}[s.phase];
+  el.querySelector('.ic').textContent = s.phase==='burnt' ? '💨' : f.e;
+  el.querySelector('.ring').style.display = s.phase==='cooking' ? 'block' : 'none';
+}
+function flyToCust(e){
+  const a=$('app').getBoundingClientRect(), el=document.createElement('div'); el.className='coinfly'; el.textContent=e;
+  el.style.left=(a.width/2-14)+'px'; el.style.top=(a.height*.78)+'px'; $('app').appendChild(el);
+  requestAnimationFrame(()=>{ el.style.top=(a.height*.26)+'px'; el.style.transform='scale(.6)'; el.style.opacity='.2'; });
+  setTimeout(()=>el.remove(),650);
+}
+
+// ---- 손님
+function newCustomer(){
+  custN++;
+  const n = Math.min(3, 1 + Math.floor(Math.random()*(1 + Math.min(2, Math.floor(served/2)))));
+  want = [...Array(n)].map(()=>FOODS[Math.floor(Math.random()*FOODS.length)].k);
+  got = want.map(()=>false); heart = 1;
+  $('custBody').innerHTML = custSVG(Math.floor(Math.random()*30));
+  const c=$('cust'); c.className='cust'; void c.offsetWidth; c.classList.add('enter');
+  drawBubble(); drawHeart();
+}
+function drawBubble(){ $('bubble').innerHTML = want.map((k,i)=>`<span class="it ${got[i]?'done':'todo'}">${FOODS.find(f=>f.k===k).e}</span>`).join(''); }
+function drawHeart(){ $('heartFill').setAttribute('y', 50*(1-heart)); $('heartFill').setAttribute('height', 50*heart); }
+function checkDone(){
+  if (!got.every(Boolean)) return;
+  served++; combo++;
+  const pts = 50*want.length + Math.round(heart*60) + (combo>1?combo*10:0);
+  coin += pts; $('coin').textContent=coin; $('served').textContent=served;
+  pop(`고마워요! +${pts}🪙` + (combo>1?` 🔥${combo}`:''),'#5cb85c'); sHappy();
+  $('cust').classList.add('happy'); $('tray').innerHTML = want.map(k=>`<span>${FOODS.find(f=>f.k===k).e}</span>`).join('');
+  setTimeout(()=>{ $('cust').classList.add('leave'); }, 700);
+  setTimeout(()=>{ $('tray').innerHTML=''; if (served>=GOAL) finish(true); else newCustomer(); }, 1150);
+}
+
+// ---- 루프
+let last=0;
+function loop(t){
+  if (!playing) return;
+  const dt = last ? (t-last)/1000 : 0; last=t;
+  // 하트 감소 (갈수록 빨라짐)
+  heart = Math.max(0, heart - dt*(0.055 + served*0.006)); drawHeart();
+  if (heart<=0 && !$('cust').classList.contains('leave')){ combo=0; pop('손님이 화나서 갔어요 😤','#f0605a'); sBad(); $('cust').classList.add('leave'); setTimeout(newCustomer,600); heart=1; }
+  // 요리 진행
+  for (const f of FOODS){
+    const s=st[f.k], el=$('c-'+f.k);
+    if (s.phase==='cooking'){
+      const p = Math.min(1,(t-s.t0)/f.cook); el.querySelector('.rp').setAttribute('stroke-dashoffset', 94.2*(1-p));
+      if (p>=1){ s.phase='ready'; s.t0=t; sReady(); paintCard(f.k); }
+    } else if (s.phase==='ready' && t-s.t0 > BURN){ s.phase='burnt'; sBurn(); paintCard(f.k); }
+  }
+  requestAnimationFrame(loop);
+}
+function sec(){ timeLeft--; $('time').textContent=timeLeft; $('timeP').classList.toggle('low', timeLeft<=10); if (timeLeft<=0) finish(false); }
+
+function start(){
+  coin=0; served=0; timeLeft=TIME; combo=0; custN=0; last=0; playing=true;
+  $('coin').textContent=0; $('served').textContent=0; $('goal').textContent=GOAL; $('time').textContent=TIME; $('timeP').classList.remove('low');
+  $('start').style.display='none'; $('end').style.display='none';
+  renderCards(); FOODS.forEach(f=>paintCard(f.k)); newCustomer();
+  clearInterval(tickId); tickId=setInterval(sec,1000); requestAnimationFrame(loop);
+  [523,659,784].forEach((f,i)=>tone(f,.12,'triangle',.2,i*.1));
+}
+function finish(clear){
+  playing=false; clearInterval(tickId);
+  const starsN = clear ? (timeLeft>=40?3:timeLeft>=20?2:1) : (served>=5?1:0);
+  $('stars').innerHTML = [0,1,2].map(i=>`<span class="${i<starsN?'':'off'}">⭐</span>`).join('');
+  let best=0; try{ best=+localStorage.getItem('udonBest2')||0; if(coin>best) localStorage.setItem('udonBest2',coin); }catch{}
+  $('endT').textContent = clear ? '오늘 장사 대성공!' : '영업 종료!';
+  $('endP').innerHTML = `손님 ${served}명 · 🪙 ${coin}<br>${coin>best?'🎉 내 최고기록!':'최고기록 🪙 '+best}<br><br>진짜 우동은 곧 나와요! 🍜`;
+  $('end').style.display='flex'; if (clear) sHappy();
+}
+$('startBtn').onclick=start; $('againBtn').onclick=start;
+renderCards(); FOODS.forEach(f=>paintCard(f.k));
+$('custBody').innerHTML = custSVG(3); want=['udon','mandu']; got=[false,false]; drawBubble(); drawHeart();
+</script>
+</body>
+</html>
